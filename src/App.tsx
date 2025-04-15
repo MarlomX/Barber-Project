@@ -3,18 +3,34 @@ import { View, Text, StyleSheet } from "react-native";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
+import * as SQLite from 'expo-sqlite';
+import { useEffect } from 'react';
+
+// Correção 1: Usar openDatabaseSync
+const db = SQLite.openDatabaseSync('BarberDB.db');
 
 export default function App() {
+  // Correção 2: Adicionar estados faltantes
   const [page, setPage] = useState<"login" | "register" | "home">("login");
   const [userName, setUserName] = useState("");
 
-  // Função de login
+  useEffect(() => {
+    // Correção 3: Usar execSync para operações DDL
+    db.execSync(`
+      CREATE TABLE IF NOT EXISTS cliente (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL
+      );
+    `);
+  }, []);
+
   const handleLoginSuccess = (name: string) => {
     setUserName(name);
     setPage("home");
   };
 
-  // Função de logout
   const handleLogout = () => {
     setPage("login");
     setUserName("");
@@ -22,7 +38,7 @@ export default function App() {
 
   return (
     <View style={styles.appContainer}>
-      <Text style={styles.title}>Barber Studio💈</Text>
+      <Text style={styles.title}>Barber Studio 💈</Text>
 
       {page === "login" && (
         <Login 

@@ -1,66 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SQLite from 'expo-sqlite';
 
-interface LoginProps {
-  goToRegister: () => void;
-  onSuccess: (name: string) => void;
-}
-
-export default function Login({ goToRegister, onSuccess }: LoginProps) {
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-
-  const handleLogin = async () => {
-    if (!email || !senha) {
-      Alert.alert("Erro", "Preencha todos os campos!");
-      return;
-    }
-
-    try {
-      const userData = await AsyncStorage.getItem(email);
-      
-      if (userData) {
-        const user = JSON.parse(userData);
-        if (user.senha === senha) {
-          onSuccess(user.nome);
-        } else {
-          Alert.alert("Erro", "Senha incorreta!");
-        }
-      } else {
-        Alert.alert("Erro", "Usuário não encontrado!");
-      }
-    } catch (error) {
-      Alert.alert("Erro", "Falha ao acessar dados!");
-    }
-  };
-
-  return (
-    <View style={styles.card}>
-      <Text style={styles.title}>Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        secureTextEntry
-        value={senha}
-        onChangeText={setSenha}
-      />
-      <Pressable style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Entrar</Text>
-      </Pressable>
-      <Pressable onPress={goToRegister}>
-        <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
-      </Pressable>
-    </View>
-  );
-}
+const db = SQLite.openDatabaseSync('BarberDB.db');
 
 const styles = StyleSheet.create({
   card: {
@@ -98,3 +40,74 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+interface Cliente {
+  id: number;
+  nome: string;
+  email: string;
+  senha: string;
+}
+
+interface LoginProps {
+  goToRegister: () => void;
+  onSuccess: (name: string) => void;
+}
+
+export default function Login({ goToRegister, onSuccess }: LoginProps) {
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+
+  const handleLogin = async () => {
+    if (!email || !senha) {
+      Alert.alert("Erro", "Preencha todos os campos!");
+      return;
+    }
+  
+    try {
+      // Usar getAllAsync para SELECT com parâmetros seguros
+      const result = await db.getAllAsync<Cliente>(
+        'SELECT * FROM cliente WHERE email = ?;',
+        [email]
+      );
+  
+      if (result.length === 0) {
+        Alert.alert("Erro", "Usuário não encontrado!");
+      } else {
+        const user = result[0];
+        if (user.senha === senha) {
+          onSuccess(user.nome);
+        } else {
+          Alert.alert("Erro", "Senha incorreta!");
+        }
+      }
+    } catch (error) {
+      Alert.alert("Erro", "Falha na autenticação!");
+    }
+  };
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Login</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Senha"
+        secureTextEntry
+        value={senha}
+        onChangeText={setSenha}
+      />
+      <Pressable style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Entrar</Text>
+      </Pressable>
+      <Pressable onPress={goToRegister}>
+        <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
+      </Pressable>
+    </View>
+  );
+}

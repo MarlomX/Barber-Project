@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SQLite from 'expo-sqlite';
+
+const db = SQLite.openDatabaseSync('BarberDB.db');
 
 interface RegisterProps {
   goToLogin: () => void;
@@ -12,18 +14,33 @@ export default function Register({ goToLogin }: RegisterProps) {
   const [senha, setSenha] = useState("");
 
   const handleRegister = async () => {
+    if (!nome || !email || !senha) {
+      Alert.alert("Erro", "Preencha todos os campos!");
+      return;
+    }
+
     try {
-      const exists = await AsyncStorage.getItem(email);
-      if (exists) {
-        Alert.alert("Erro", "Usuário já existe!");
+      // Verificar se email já existe
+      const existingUser = await db.getAllAsync(
+        'SELECT * FROM cliente WHERE email = ?;',
+        [email]
+      );
+
+      if (existingUser.length > 0) {
+        Alert.alert("Erro", "Este email já está cadastrado!");
         return;
       }
 
-      await AsyncStorage.setItem(email, JSON.stringify({ nome, senha }));
+      // Inserir novo usuário
+      await db.runAsync(
+        'INSERT INTO cliente (nome, email, senha) VALUES (?, ?, ?);',
+        [nome, email, senha]
+      );
+
       Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
       goToLogin();
     } catch (error) {
-      Alert.alert("Erro", "Falha no cadastro!");
+      Alert.alert("Erro", "Falha no cadastro: " + error.message);
     }
   };
 
