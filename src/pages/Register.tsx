@@ -2,17 +2,21 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
 import * as SQLite from 'expo-sqlite';
 
+// busca o banco de dados
 const db = SQLite.openDatabaseSync('BarberDB.db');
 
+//manda o usuario para a tela de login
 interface RegisterProps {
   goToLogin: () => void;
 }
 
 export default function Register({ goToLogin }: RegisterProps) {
+  // variaveis com os valores recebidos pelo usuario
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
 
+  // Verifica se os campos estão prenchidos
   const handleRegister = async () => {
     if (!nome || !email || !senha) {
       Alert.alert("Erro", "Preencha todos os campos!");
@@ -44,6 +48,7 @@ export default function Register({ goToLogin }: RegisterProps) {
     }
   };
 
+  //Visualisção da tela
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Cadastro</Text>
@@ -77,6 +82,7 @@ export default function Register({ goToLogin }: RegisterProps) {
   );
 }
 
+//Estilos
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#333',

@@ -6,16 +6,17 @@ import Home from "./pages/Home";
 import * as SQLite from 'expo-sqlite';
 import { useEffect } from 'react';
 
-// Correção 1: Usar openDatabaseSync
+// Criar uma variavel que abre o Banco de dados
 const db = SQLite.openDatabaseSync('BarberDB.db');
 
+//Função principal
 export default function App() {
-  // Correção 2: Adicionar estados faltantes
+  // Amarzena qual tela sera mostrada para o usuario e começa definindo a pagina de login como a inicial
   const [page, setPage] = useState<"login" | "register" | "home">("login");
   const [userName, setUserName] = useState("");
 
+ // Configura o banco de dados garantindo a existencia da tabela cliente
   useEffect(() => {
-    // Correção 3: Usar execSync para operações DDL
     db.execSync(`
       CREATE TABLE IF NOT EXISTS cliente (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,20 +27,26 @@ export default function App() {
     `);
   }, []);
 
+  //função caso login for bem sucedido
   const handleLoginSuccess = (name: string) => {
     setUserName(name);
     setPage("home");
   };
 
+  // função para deslogar o usuario
   const handleLogout = () => {
     setPage("login");
     setUserName("");
   };
 
+  // visualisação do aplicativo
+  //dependendo do estado da variavel page muda a tela mostrada
   return (
+    //
     <View style={styles.appContainer}>
       <Text style={styles.title}>Barber Studio 💈</Text>
 
+    
       {page === "login" && (
         <Login 
           goToRegister={() => setPage("register")} 
@@ -56,6 +63,7 @@ export default function App() {
   );
 }
 
+//Estilos
 const styles = StyleSheet.create({
   appContainer: {
     flex: 1,

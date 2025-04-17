@@ -20,7 +20,7 @@ export default function Home({ userName, onLogout }: HomeProps) {
   );
 }
 
-// Adicione estes estilos
+// Estilos
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#333',

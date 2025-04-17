@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
 import * as SQLite from 'expo-sqlite';
 
+//busca o banco de dados
 const db = SQLite.openDatabaseSync('BarberDB.db');
 
+// define os estilos
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#333',
@@ -41,6 +43,7 @@ const styles = StyleSheet.create({
   },
 });
 
+// cria uma interface para os dados do usuario e defini sesu tipos
 interface Cliente {
   id: number;
   nome: string;
@@ -48,35 +51,42 @@ interface Cliente {
   senha: string;
 }
 
+//criar uma interface que quando chamada envia o usuario para tela de resgistro ou para tela Home
 interface LoginProps {
   goToRegister: () => void;
   onSuccess: (name: string) => void;
 }
 
 export default function Login({ goToRegister, onSuccess }: LoginProps) {
+  //define as variaveis para receber o email e a senha
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
 
+  //verifica se os capos estão prenchidos
   const handleLogin = async () => {
     if (!email || !senha) {
       Alert.alert("Erro", "Preencha todos os campos!");
       return;
     }
-  
+  // tentar conferir se o usuario esta no banco de dados
     try {
       // Usar getAllAsync para SELECT com parâmetros seguros
+      //verifica se existe um Email no banco de dados igual ao recebido
       const result = await db.getAllAsync<Cliente>(
         'SELECT * FROM cliente WHERE email = ?;',
         [email]
       );
-  
+      // caso não encontre laçã uma mensagem de erro
       if (result.length === 0) {
         Alert.alert("Erro", "Usuário não encontrado!");
-      } else {
+      } // Caso encontre verifica se a senha e a mesma que esta no banco de dados
+      else {
         const user = result[0];
+        //Caso for a mesma comfirma o login
         if (user.senha === senha) {
           onSuccess(user.nome);
-        } else {
+        } // caso contario manda mensagem de error
+         else {
           Alert.alert("Erro", "Senha incorreta!");
         }
       }
@@ -85,6 +95,7 @@ export default function Login({ goToRegister, onSuccess }: LoginProps) {
     }
   };
 
+  // visualisação da tela
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Login</Text>
