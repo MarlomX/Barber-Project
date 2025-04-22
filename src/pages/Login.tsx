@@ -1,67 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SQLite from 'expo-sqlite';
 
-interface LoginProps {
-  goToRegister: () => void;
-  onSuccess: (name: string) => void;
-}
+//busca o banco de dados
+const db = SQLite.openDatabaseSync('BarberDB.db');
 
-export default function Login({ goToRegister, onSuccess }: LoginProps) {
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-
-  const handleLogin = async () => {
-    if (!email || !senha) {
-      Alert.alert("Erro", "Preencha todos os campos!");
-      return;
-    }
-
-    try {
-      const userData = await AsyncStorage.getItem(email);
-      
-      if (userData) {
-        const user = JSON.parse(userData);
-        if (user.senha === senha) {
-          onSuccess(user.nome);
-        } else {
-          Alert.alert("Erro", "Senha incorreta!");
-        }
-      } else {
-        Alert.alert("Erro", "Usuário não encontrado!");
-      }
-    } catch (error) {
-      Alert.alert("Erro", "Falha ao acessar dados!");
-    }
-  };
-
-  return (
-    <View style={styles.card}>
-      <Text style={styles.title}>Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        secureTextEntry
-        value={senha}
-        onChangeText={setSenha}
-      />
-      <Pressable style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Entrar</Text>
-      </Pressable>
-      <Pressable onPress={goToRegister}>
-        <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
-      </Pressable>
-    </View>
-  );
-}
-
+// define os estilos
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#333',
@@ -98,3 +42,83 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+// cria uma interface para os dados do usuario e defini sesu tipos
+interface Cliente {
+  id: number;
+  nome: string;
+  email: string;
+  senha: string;
+}
+
+//criar uma interface que quando chamada envia o usuario para tela de resgistro ou para tela Home
+interface LoginProps {
+  goToRegister: () => void;
+  onSuccess: (name: string) => void;
+}
+
+export default function Login({ goToRegister, onSuccess }: LoginProps) {
+  //define as variaveis para receber o email e a senha
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+
+  //verifica se os capos estão prenchidos
+  const handleLogin = async () => {
+    if (!email || !senha) {
+      Alert.alert("Erro", "Preencha todos os campos!");
+      return;
+    }
+  // tentar conferir se o usuario esta no banco de dados
+    try {
+      // Usar getAllAsync para SELECT com parâmetros seguros
+      //verifica se existe um Email no banco de dados igual ao recebido
+      const result = await db.getAllAsync<Cliente>(
+        'SELECT * FROM cliente WHERE email = ?;',
+        [email]
+      );
+      // caso não encontre laçã uma mensagem de erro
+      if (result.length === 0) {
+        Alert.alert("Erro", "Usuário não encontrado!");
+      } // Caso encontre verifica se a senha e a mesma que esta no banco de dados
+      else {
+        const user = result[0];
+        //Caso for a mesma comfirma o login
+        if (user.senha === senha) {
+          onSuccess(user.nome);
+        } // caso contario manda mensagem de error
+         else {
+          Alert.alert("Erro", "Senha incorreta!");
+        }
+      }
+    } catch (error) {
+      Alert.alert("Erro", "Falha na autenticação!");
+    }
+  };
+
+  // visualisação da tela
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Login</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Senha"
+        secureTextEntry
+        value={senha}
+        onChangeText={setSenha}
+      />
+      <Pressable style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Entrar</Text>
+      </Pressable>
+      <Pressable onPress={goToRegister}>
+        <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
+      </Pressable>
+    </View>
+  );
+}

@@ -1,32 +1,54 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SQLite from 'expo-sqlite';
 
+// busca o banco de dados
+const db = SQLite.openDatabaseSync('BarberDB.db');
+
+//manda o usuario para a tela de login
 interface RegisterProps {
   goToLogin: () => void;
 }
 
 export default function Register({ goToLogin }: RegisterProps) {
+  // variaveis com os valores recebidos pelo usuario
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
 
+  // Verifica se os campos estão prenchidos
   const handleRegister = async () => {
+    if (!nome || !email || !senha) {
+      Alert.alert("Erro", "Preencha todos os campos!");
+      return;
+    }
+
     try {
-      const exists = await AsyncStorage.getItem(email);
-      if (exists) {
-        Alert.alert("Erro", "Usuário já existe!");
+      // Verificar se email já existe
+      const existingUser = await db.getAllAsync(
+        'SELECT * FROM cliente WHERE email = ?;',
+        [email]
+      );
+
+      if (existingUser.length > 0) {
+        Alert.alert("Erro", "Este email já está cadastrado!");
         return;
       }
 
-      await AsyncStorage.setItem(email, JSON.stringify({ nome, senha }));
+      // Inserir novo usuário
+      await db.runAsync(
+        'INSERT INTO cliente (nome, email, senha) VALUES (?, ?, ?);',
+        [nome, email, senha]
+      );
+
       Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
       goToLogin();
     } catch (error) {
-      Alert.alert("Erro", "Falha no cadastro!");
+      Alert.alert("Erro", "Falha no cadastro: " + error.message);
     }
   };
 
+  //Visualisção da tela
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Cadastro</Text>
@@ -60,6 +82,7 @@ export default function Register({ goToLogin }: RegisterProps) {
   );
 }
 
+//Estilos
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#333',
