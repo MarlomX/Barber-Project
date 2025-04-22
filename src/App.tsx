@@ -3,6 +3,9 @@ import { View, Text, StyleSheet } from "react-native";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
+import SelectBarber from "./pages/SelectBarber";
+import SelectHaircut from "./pages/SelectHaircut";
+import ConfirmOrder from "./pages/ConfirmOrder";
 import * as SQLite from 'expo-sqlite';
 import { useEffect } from 'react';
 
@@ -12,8 +15,15 @@ const db = SQLite.openDatabaseSync('BarberDB.db');
 //Função principal
 export default function App() {
   // Amarzena qual tela sera mostrada para o usuario e começa definindo a pagina de login como a inicial
-  const [page, setPage] = useState<"login" | "register" | "home">("login");
+  const [page, setPage] = useState<"login" | "register" | "home"|
+   "SelectBarber" | "SelectHaircut"| "ConfirmOrder">("login");
+
   const [userName, setUserName] = useState("");
+
+  const [selectedBarber, setSelectedBarber] = useState<string>("");  
+  
+  const [selectedHaircut, setSelectedHaircut] = useState<string>("");
+
 
  // Configura o banco de dados garantindo a existencia da tabela cliente
   useEffect(() => {
@@ -58,7 +68,40 @@ export default function App() {
         <Register goToLogin={() => setPage("login")} />
       )}
       
-      {page === "home" && <Home userName={userName} onLogout={handleLogout} />}
+      {page === "home" && (
+        <Home 
+        userName={userName} 
+        onLogout={handleLogout}
+        goToSelectBarber={() => setPage("SelectBarber")}
+        />
+        )}
+
+      {page === "SelectBarber" &&(
+        <SelectBarber 
+        onSelectBarber={(barbeiro) => setSelectedBarber(barbeiro)}
+        goToSelectHaircut = {() => setPage("SelectHaircut")}
+        goToBack = {() => setPage("home")}
+        />
+      )}
+
+      {page === "SelectHaircut" &&(
+        <SelectHaircut
+        barber={selectedBarber}
+        onSelectHaircut={(haircut) => setSelectedHaircut(haircut)}
+        goToConfirmOrder={()=> setPage("ConfirmOrder")}
+        goToBack={() => setPage("SelectBarber")}
+        />
+      )}
+
+      {page === "ConfirmOrder" &&(
+        <ConfirmOrder
+        barber = {selectedBarber}
+        haircut= {selectedHaircut}
+        onConfirm={() => setPage("home")}
+        goToBack={() => setPage("SelectHaircut")}
+        />
+      )}
+
     </View>
   );
 }

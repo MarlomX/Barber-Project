@@ -4,15 +4,19 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 interface HomeProps {
   userName: string;
   onLogout: () => void; // Nova prop
+  goToSelectBarber: () => void;
 }
 
-export default function Home({ userName, onLogout }: HomeProps) {
+export default function Home({ userName, onLogout, goToSelectBarber  }: HomeProps) {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Bem-vindo, {userName}!</Text>
       <Text style={styles.text}>
         Você está logado no sistema da <Text style={styles.bold}>Studio Barber</Text>.
       </Text>
+      <Pressable style={styles.continueButton} onPress={goToSelectBarber}>        
+        <Text style={styles.buttonText}>Continuar</Text>
+      </Pressable>
       <Pressable style={styles.logoutButton} onPress={onLogout}>
         <Text style={styles.buttonText}>Sair</Text>
       </Pressable>
@@ -41,6 +45,12 @@ const styles = StyleSheet.create({
   },
   bold: {
     fontWeight: 'bold',
+  },
+  continueButton: {
+    backgroundColor: '#2c09de',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
   },
   logoutButton: {
     backgroundColor: '#ff4444',
