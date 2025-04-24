@@ -12,10 +12,16 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.marlomexpor.Barber_Project"
     },
     "plugins": [
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "237ba22e-444c-4ad3-b1ee-513533bbc974"
+      }
+    }
   }
 }
