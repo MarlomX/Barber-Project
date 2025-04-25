@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -6,11 +6,7 @@ import Home from "./pages/Home";
 import SelectBarber from "./pages/SelectBarber";
 import SelectHaircut from "./pages/SelectHaircut";
 import ConfirmOrder from "./pages/ConfirmOrder";
-import * as SQLite from 'expo-sqlite';
-import { useEffect } from 'react';
-
-// Criar uma variavel que abre o Banco de dados
-const db = SQLite.openDatabaseSync('BarberDB.db');
+import { initDB } from "./database";
 
 //Função principal
 export default function App() {
@@ -25,17 +21,13 @@ export default function App() {
   const [selectedHaircut, setSelectedHaircut] = useState<string>("");
 
 
- // Configura o banco de dados garantindo a existencia da tabela cliente
-  useEffect(() => {
-    db.execSync(`
-      CREATE TABLE IF NOT EXISTS cliente (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        senha TEXT NOT NULL
-      );
-    `);
-  }, []);
+ // Inicialização do banco de dados
+ useEffect(() => {
+  const initializeDB = async () => {
+    await initDB(); // Aguarde a conclusão
+  };
+  initializeDB();
+}, []);
 
   //função caso login for bem sucedido
   const handleLoginSuccess = (name: string) => {

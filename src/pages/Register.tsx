@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
-import * as SQLite from 'expo-sqlite';
-
-// busca o banco de dados
-const db = SQLite.openDatabaseSync('BarberDB.db');
+import {db} from "../database";
+import { getClientByEmail, createClient } from "../database/queries/clientQueries";
 
 //manda o usuario para a tela de login
 interface RegisterProps {
@@ -12,39 +10,31 @@ interface RegisterProps {
 
 export default function Register({ goToLogin }: RegisterProps) {
   // variaveis com os valores recebidos pelo usuario
-  const [nome, setNome] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
+  const [password, setPassword] = useState("");
 
   // Verifica se os campos estão prenchidos
   const handleRegister = async () => {
-    if (!nome || !email || !senha) {
+    if (!name || !email || !password) {
       Alert.alert("Erro", "Preencha todos os campos!");
       return;
     }
 
     try {
-      // Verificar se email já existe
-      const existingUser = await db.getAllAsync(
-        'SELECT * FROM cliente WHERE email = ?;',
-        [email]
-      );
-
-      if (existingUser.length > 0) {
-        Alert.alert("Erro", "Este email já está cadastrado!");
-        return;
+      //Verifica se exite um cliente com esse email.
+      if(await getClientByEmail(db,email)){
+        Alert.alert("Erro", "Este email já está cadastrado!")
+        return
       }
+      
+      //criar um novo cliente no banco de dados:
 
-      // Inserir novo usuário
-      await db.runAsync(
-        'INSERT INTO cliente (nome, email, senha) VALUES (?, ?, ?);',
-        [nome, email, senha]
-      );
-
+      createClient(db, name, email, password);
       Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
       goToLogin();
     } catch (error) {
-      Alert.alert("Erro", "Falha no cadastro: " + error.message);
+      Alert.alert("Erro: ", error.message);
     }
   };
 
@@ -55,8 +45,8 @@ export default function Register({ goToLogin }: RegisterProps) {
       <TextInput
         style={styles.input}
         placeholder="Nome"
-        value={nome}
-        onChangeText={setNome}
+        value={name}
+        onChangeText={setName}
       />
       <TextInput
         style={styles.input}
@@ -69,8 +59,8 @@ export default function Register({ goToLogin }: RegisterProps) {
         style={styles.input}
         placeholder="Senha"
         secureTextEntry
-        value={senha}
-        onChangeText={setSenha}
+        value={password}
+        onChangeText={setPassword}
       />
       <Pressable style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Cadastrar</Text>

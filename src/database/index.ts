@@ -1,16 +1,13 @@
-import SQLite from 'react-native-sqlite-storage';
-import { createClienteTable } from './models/Cliente';
+import * as SQLite from 'expo-sqlite';
+import { createClientTable } from './models/Client';
 
 //Criar o banco de dados no local padrão
-const db = SQLite.openDatabase(
-  { name: 'BarberDB.db', location: 'default' },
-  () => console.log("Banco Conectado"),
-  error => console.error('Erro ao abrir banco de dados', error)
-);
+const db = SQLite.openDatabaseSync('BarberDB.db');
 
 // Função de inicialização que cria todas as tabelas
 const initDB = () => {
-  createClienteTable(db);
+  createClientTable(db);
 };
 
+//Exporta o banco de dado e a função para iniciar o banco de dados
 export { db, initDB };
