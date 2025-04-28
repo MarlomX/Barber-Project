@@ -8,7 +8,7 @@ interface Client {
     password: string;
   }
   // Define os tipos de retornos das funções
-  type AuthResult = [success: boolean, message: string];
+  type AuthResult = {success: boolean, message: string};
   type GetClientResult = Client | undefined;
 
 
@@ -42,9 +42,9 @@ export const createClient = async (db: SQLiteDatabase ,name: string, email:strin
 
 /*
 Recebe um Email e Senha e verifica se eles são validos
-Retorna um array o primeiro valor[0] define se a autentificação foi um sucesso
-O segundo valor [1] mudar, em caso de sucesso envia o nome do usuario.
-Em caso de fracasso manda o motivo da falhar.
+Retorna um objeto, o primeiro valor 'success' e um boleano que indica se a authetificação foi um sucesso.
+Já o segundo valor e uma string, em casso de sucesso estar com o nome do cliente. 
+No caso de um fracasso e uma menssagem com o motivo do fracasso.
 */
 export const authenticateClient = async(
     db: SQLiteDatabase,
@@ -55,12 +55,12 @@ export const authenticateClient = async(
         const client = await getClientByEmail(db, email);
         if(client){
             if (client.password === password){
-                return [true, client.name];
+                return {success: true, message: client.name};
             } else{
-                return [false, "Senha Inccoreta"];
+                return {success: false, message: "Senha Inccoreta"};
             }
         } else{
-            return [false, "Email Inccoreto ou não cadastrado"]
+            return {success: false, message: "Email Inccoreto ou não cadastrado"}
         }
     } catch(error){
         throw new Error("Erro ao autenticar o Cliente: " + error.message);

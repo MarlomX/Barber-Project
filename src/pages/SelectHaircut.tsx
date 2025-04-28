@@ -2,18 +2,18 @@ import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 
 interface Props {
-  barber: string;
+  barberId: number;
   onSelectHaircut: (Haircut: string) => void;
   goToConfirmOrder: () => void;
   goToBack: () => void;
 }
 
-export default function SelectHaircut({ barber, onSelectHaircut, goToConfirmOrder, goToBack }: Props) {
+export default function SelectHaircut({ barberId, onSelectHaircut, goToConfirmOrder, goToBack }: Props) {
   const cortes = ["Corte Social", "Fade", "Navalhado"];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Barbeiro: {barber}</Text>
+      <Text style={styles.title}>Barbeiro: {barberId}</Text>
       <Text style={styles.subtitle}>Escolha o Corte</Text>
       {cortes.map((haircut) => (
         <Pressable key={haircut} style={styles.button} onPress={() => onSelectHaircut(haircut)}>

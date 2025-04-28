@@ -11,33 +11,52 @@ import { initDB } from "./database";
 //Função principal
 export default function App() {
   // Amarzena qual tela sera mostrada para o usuario e começa definindo a pagina de login como a inicial
-  const [page, setPage] = useState<"login" | "register" | "home"|
-   "SelectBarber" | "SelectHaircut"| "ConfirmOrder">("login");
+  
+  enum Pages {
+    LOGIN = "Login",
+    REGISTER = "register",
+    HOME = "home",
+    SELECTBARBER = "SelectBarber",
+    SELECTHAIRCUT ="SelectHaircut",
+    CONFIRMORDER = "ConfirmOrder"
+  }
+  const [page, setPage] = useState<Pages>(Pages.LOGIN);
 
   const [userName, setUserName] = useState("");
 
-  const [selectedBarber, setSelectedBarber] = useState<string>("");  
+  const [selectedBarber, setSelectedBarber] = useState<number>();  
   
   const [selectedHaircut, setSelectedHaircut] = useState<string>("");
+
+  const [isDBInitialized, setIsDBInitialized] = useState(false);
 
 
  // Inicialização do banco de dados
  useEffect(() => {
   const initializeDB = async () => {
-    await initDB(); // Aguarde a conclusão
+    if (!isDBInitialized){
+      try {
+        await initDB(); // Aguarde a conclusão
+        setIsDBInitialized(true);
+        console.log("Banco de dados iniciado com sucesso")
+      } catch(error){
+        console.error("Erro ao iniciar o banco de dados: ", error)
+      }
+    }
   };
+  
   initializeDB();
-}, []);
+}, [isDBInitialized]);
 
   //função caso login for bem sucedido
   const handleLoginSuccess = (name: string) => {
     setUserName(name);
-    setPage("home");
+    setPage(Pages.HOME);
   };
 
   // função para deslogar o usuario
   const handleLogout = () => {
-    setPage("login");
+    setPage(Pages.LOGIN);
     setUserName("");
   };
 
@@ -49,48 +68,48 @@ export default function App() {
       <Text style={styles.title}>Barber Studio 💈</Text>
 
     
-      {page === "login" && (
+      {page === Pages.LOGIN && (
         <Login 
-          goToRegister={() => setPage("register")} 
+          goToRegister={() => setPage(Pages.REGISTER)} 
           onSuccess={handleLoginSuccess} 
         />
       )}
       
-      {page === "register" && (
-        <Register goToLogin={() => setPage("login")} />
+      {page === Pages.REGISTER && (
+        <Register goToLogin={() => setPage(Pages.LOGIN)} />
       )}
       
-      {page === "home" && (
+      {page === Pages.HOME && (
         <Home 
         userName={userName} 
         onLogout={handleLogout}
-        goToSelectBarber={() => setPage("SelectBarber")}
+        goToSelectBarber={() => setPage(Pages.SELECTBARBER)}
         />
         )}
 
-      {page === "SelectBarber" &&(
+      {page === Pages.SELECTBARBER &&(
         <SelectBarber 
-        onSelectBarber={(barbeiro) => setSelectedBarber(barbeiro)}
-        goToSelectHaircut = {() => setPage("SelectHaircut")}
-        goToBack = {() => setPage("home")}
+        onSelectBarber={(barberId) => setSelectedBarber(barberId)}
+        goToSelectHaircut = {() => setPage(Pages.SELECTHAIRCUT)}
+        goToBack = {() => setPage(Pages.HOME)}
         />
       )}
 
-      {page === "SelectHaircut" &&(
+      {page === Pages.SELECTHAIRCUT &&(
         <SelectHaircut
-        barber={selectedBarber}
+        barberId={selectedBarber}
         onSelectHaircut={(haircut) => setSelectedHaircut(haircut)}
-        goToConfirmOrder={()=> setPage("ConfirmOrder")}
-        goToBack={() => setPage("SelectBarber")}
+        goToConfirmOrder={()=> setPage(Pages.CONFIRMORDER)}
+        goToBack={() => setPage(Pages.SELECTBARBER)}
         />
       )}
 
-      {page === "ConfirmOrder" &&(
+      {page === Pages.CONFIRMORDER &&(
         <ConfirmOrder
-        barber = {selectedBarber}
+        barberId = {selectedBarber}
         haircut= {selectedHaircut}
-        onConfirm={() => setPage("home")}
-        goToBack={() => setPage("SelectHaircut")}
+        onConfirm={() => setPage(Pages.HOME)}
+        goToBack={() => setPage(Pages.SELECTHAIRCUT)}
         />
       )}
 

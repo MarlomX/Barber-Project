@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
-import {db} from "../database";
+import db from "../database";
 import { getClientByEmail, createClient } from "../database/queries/clientQueries";
 
 //manda o usuario para a tela de login
@@ -30,7 +30,7 @@ export default function Register({ goToLogin }: RegisterProps) {
       
       //criar um novo cliente no banco de dados:
 
-      createClient(db, name, email, password);
+      await createClient(db, name, email, password);
       Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
       goToLogin();
     } catch (error) {

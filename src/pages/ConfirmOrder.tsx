@@ -2,22 +2,22 @@ import React from "react";
 import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
 
 interface Props {
-  barber: string;
+  barberId: number;
   haircut: string;
   onConfirm : () => void;
   goToBack: () => void;
 }
 
-export default function ConfirmOrder({ barber, haircut, onConfirm, goToBack }: Props) {
+export default function ConfirmOrder({ barberId, haircut, onConfirm, goToBack }: Props) {
   const confirm = () => {
-    Alert.alert("Pedido Confirmado", `Barbeiro: ${barber}\nCorte: ${haircut}`);
+    Alert.alert("Pedido Confirmado", `Barbeiro: ${barberId}\nCorte: ${haircut}`);
     onConfirm();
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Confirme seu Pedido</Text>
-      <Text style={styles.text}>Barbeiro: {barber}</Text>
+      <Text style={styles.text}>Barbeiro: {barberId}</Text>
       <Text style={styles.text}>Corte: {haircut}</Text>
       <Pressable style={styles.button} onPress={confirm}>
         <Text style={styles.buttonText}>Confirmar</Text>

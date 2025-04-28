@@ -1,6 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
-//Criar a tabela Cliente no banco de dados caso não exista
+//Criar a tabela client no banco de dados caso não exista
 export const createClientTable = async (db: SQLiteDatabase) => {
   try {
     await db.runAsync(
@@ -12,8 +12,8 @@ export const createClientTable = async (db: SQLiteDatabase) => {
       );`,
       []
     );
-    console.log("Tabela cliente criada");
+    console.log("Tabela client criada");
   } catch (error) {
-    console.error("Erro na criação da tabela:", error);
+    console.error("Erro na criação da tabela client:", error);
   }
 };

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
-import {db} from "../database";
+import db from "../database";
 import { authenticateClient } from "../database/queries/clientQueries";
 
 //criar uma interface que quando chamada envia o usuario para tela de resgistro ou para tela Home
@@ -23,15 +23,15 @@ export default function Login({ goToRegister, onSuccess }: LoginProps) {
     try {
       /* 
       Tentar autenticar o cliente.
-      Recebe um aray com o primeiro valor[0] se autenticação foi um sucesso ou um fracasso.
-      Já o segundo valor[1] mudar, caso a autenticação for um sucesso mandar o nome do cliente.
-      Caso for um fracasso manda o motivo do erro.
+      Recebe um objeto, o primeiro valor 'success' e um boleano que indica se a authetificação foi um sucesso.
+      Já o segundo valor e uma string, em casso de sucesso estar com o nome do cliente. 
+      No caso de um fracasso e uma menssagem com o motivo do fracasso.
        */
-      const result = await authenticateClient(db, email, password);
-      if(result[0]){
-        onSuccess(result[1]);
+      const { success, message} = await authenticateClient(db, email, password);
+      if(success){
+        onSuccess(message);
       } else {
-          Alert.alert("Erro: ", result[1]);
+          Alert.alert("Erro: ", message);
         }
     } catch (error) {
       Alert.alert("Erro", "Falha na autenticação!");
