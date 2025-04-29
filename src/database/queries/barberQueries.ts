@@ -16,3 +16,18 @@ export const getAllBarbers = async(
         throw new Error('Erro ao buscar todos os barbeiros: ' + error.message);
     }
 }
+
+export const getBarberForId = async(
+    db: SQLiteDatabase,
+    id: number
+): Promise <Barber | undefined> => {
+    try{
+        const result = await db.getFirstAsync<Barber>(
+            'SELECT id, name FROM barber WHERE id = ?;',
+            [id]
+        );
+        return result;
+    } catch(error) {
+        throw new Error('Erro ao buscar um barbeiro: ' + error.message);
+    }
+}

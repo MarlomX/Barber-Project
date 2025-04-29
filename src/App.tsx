@@ -26,7 +26,7 @@ export default function App() {
 
   const [selectedBarber, setSelectedBarber] = useState<number>();  
   
-  const [selectedHaircut, setSelectedHaircut] = useState<string>("");
+  const [selectedHaircut, setSelectedHaircut] = useState<number>();
 
   const [isDBInitialized, setIsDBInitialized] = useState(false);
 
@@ -98,7 +98,7 @@ export default function App() {
       {page === Pages.SELECTHAIRCUT &&(
         <SelectHaircut
         barberId={selectedBarber}
-        onSelectHaircut={(haircut) => setSelectedHaircut(haircut)}
+        onSelectHaircut={(haircutId) => setSelectedHaircut(haircutId)}
         goToConfirmOrder={()=> setPage(Pages.CONFIRMORDER)}
         goToBack={() => setPage(Pages.SELECTBARBER)}
         />
@@ -107,7 +107,7 @@ export default function App() {
       {page === Pages.CONFIRMORDER &&(
         <ConfirmOrder
         barberId = {selectedBarber}
-        haircut= {selectedHaircut}
+        haircutId= {selectedHaircut}
         onConfirm={() => setPage(Pages.HOME)}
         goToBack={() => setPage(Pages.SELECTHAIRCUT)}
         />

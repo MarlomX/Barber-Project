@@ -36,13 +36,13 @@ export default function SelectBarber({ onSelectBarber, goToSelectHaircut, goToBa
     onSelectBarber(barber.id);
   };
 
-  if (loading){
-    return(
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#e0c097" />
-      </View>
-    );
-  }
+  if (loading) {
+      return (
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#e0c097" />
+        </View>
+      );
+    }
 
   return (
     <View style={styles.container}>
