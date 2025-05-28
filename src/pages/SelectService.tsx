@@ -1,37 +1,44 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import db from "../database";
-import { getAllBarbers, Barber } from "../database/queries/barberQueries";
+import { Barber, getBarberForId } from "../database/queries/barberQueries";
+import { Service, getServicesForBarbeId } from "../database/queries/serviceQueries";
 
 interface Props {
-  onSelectBarber: (barberId: number) => void;
-  goToSelectService: () => void;
+  barberId: number;
+  onSelectService: (serviceId: number) => void;
+  goToConfirmOrder: () => void;
   goToBack: () => void;
 }
 
-export default function SelectBarber({ onSelectBarber, goToSelectService, goToBack }: Props) {
-  const [barbers, setBarbers] = useState<Barber[]>([]);
+export default function SelectService({ barberId, onSelectService, goToConfirmOrder, goToBack }: Props) {
+  const [barber, setBarber] = useState<Barber | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBarberId, setSelectedBarberId] = useState<number | null>(null);
+  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
 
   useEffect(() => {
-    const loadBarbers = async () => {
+    const loadData = async () => {
       try {
-        const data = await getAllBarbers(db);
-        setBarbers(data);
+        const [barberData, servicesData] = await Promise.all([
+          getBarberForId(db, barberId),
+          getServicesForBarbeId(db, barberId)
+        ]);
+        setBarber(barberData || null);
+        setServices(servicesData);
       } catch (error) {
-        console.error("Erro ao carregar barbeiros: ", error);
+        console.error("Erro ao carregar dados:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadBarbers();
-  }, []);
+    loadData();
+  }, [barberId]);
 
-  const handleSelect = (barber: Barber) => {
-    setSelectedBarberId(barber.id);
-    onSelectBarber(barber.id);
+  const handleSelect = (service: Service) => {
+    setSelectedServiceId(service.id);
+    onSelectService(service.id);
   };
 
   if (loading) {
@@ -44,28 +51,32 @@ export default function SelectBarber({ onSelectBarber, goToSelectService, goToBa
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Escolha o Barbeiro</Text>
+      <Text style={styles.title}>Barbeiro: {barber?.name || "Barbeiro não encontrado"}</Text>
+      <Text style={styles.subtitle}>Escolha o Corte</Text>
 
       <ScrollView style={styles.scrollContainer}>
-        {barbers.map((barber) => (
+        {services.map((service) => (
           <Pressable
-            key={barber.id}
+            key={service.id}
             style={[
               styles.button,
-              selectedBarberId === barber.id && styles.selectedButton
+              selectedServiceId === service.id && styles.selectedButton
             ]}
-            onPress={() => handleSelect(barber)}
+            onPress={() => handleSelect(service)}
           >
-            <Text style={styles.buttonText}>{barber.name}</Text>
+            <Text style={styles.buttonText}>{service.name}</Text>
+            <Text style={styles.priceText}>
+              {service.price ? `R$ ${service.price.toFixed(2)}` : "Preço não disponível"}
+            </Text>
           </Pressable>
         ))}
       </ScrollView>
 
       <View style={styles.footer}>
         <Pressable
-          style={[styles.continueButton, !selectedBarberId && styles.disabledButton]}
-          onPress={goToSelectService}
-          disabled={!selectedBarberId}
+          style={[styles.continueButton, !selectedServiceId && styles.disabledButton]}
+          onPress={goToConfirmOrder}
+          disabled={!selectedServiceId}
         >
           <Text style={styles.buttonText}>Continuar</Text>
         </Pressable>
@@ -83,9 +94,13 @@ const styles = StyleSheet.create({
     flex: 1
   },
   title: {
-    fontSize: 20,
-    marginBottom: 15,
+    fontSize: 18,
     color: "#333",
+    marginBottom: 5
+  },
+  subtitle: {
+    fontSize: 16,
+    marginVertical: 10,
     fontWeight: 'bold'
   },
   scrollContainer: {
@@ -105,9 +120,15 @@ const styles = StyleSheet.create({
     borderColor: '#d0a070'
   },
   buttonText: {
-    color: "#333",
     textAlign: "center",
+    color: "#333",
     fontSize: 16
+  },
+  priceText: {
+    textAlign: "center",
+    color: "#666",
+    fontSize: 14,
+    marginTop: 5
   },
   footer: {
     paddingTop: 10,

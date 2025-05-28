@@ -4,7 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 import SelectBarber from "./pages/SelectBarber";
-import SelectHaircut from "./pages/SelectHaircut";
+import SelectService from "./pages/SelectService";
 import ConfirmOrder from "./pages/ConfirmOrder";
 import { initDB } from "./database";
 
@@ -17,7 +17,7 @@ export default function App() {
     REGISTER = "register",
     HOME = "home",
     SELECTBARBER = "SelectBarber",
-    SELECTHAIRCUT ="SelectHaircut",
+    SELECTSERVICE ="SelectService",
     CONFIRMORDER = "ConfirmOrder"
   }
   const [page, setPage] = useState<Pages>(Pages.LOGIN);
@@ -26,7 +26,7 @@ export default function App() {
 
   const [selectedBarber, setSelectedBarber] = useState<number>();  
   
-  const [selectedHaircut, setSelectedHaircut] = useState<number>();
+  const [selectedService, setSelectedService] = useState<number>();
 
   const [isDBInitialized, setIsDBInitialized] = useState(false);
 
@@ -65,8 +65,6 @@ export default function App() {
   return (
     //
     <View style={styles.appContainer}>
-      <Text style={styles.title}>Barber Studio 💈</Text>
-
     
       {page === Pages.LOGIN && (
         <Login 
@@ -90,15 +88,15 @@ export default function App() {
       {page === Pages.SELECTBARBER &&(
         <SelectBarber 
         onSelectBarber={(barberId) => setSelectedBarber(barberId)}
-        goToSelectHaircut = {() => setPage(Pages.SELECTHAIRCUT)}
+        goToSelectService = {() => setPage(Pages.SELECTSERVICE)}
         goToBack = {() => setPage(Pages.HOME)}
         />
       )}
 
-      {page === Pages.SELECTHAIRCUT &&(
-        <SelectHaircut
+      {page === Pages.SELECTSERVICE &&(
+        <SelectService
         barberId={selectedBarber}
-        onSelectHaircut={(haircutId) => setSelectedHaircut(haircutId)}
+        onSelectService={(serviceId) => setSelectedService(serviceId)}
         goToConfirmOrder={()=> setPage(Pages.CONFIRMORDER)}
         goToBack={() => setPage(Pages.SELECTBARBER)}
         />
@@ -107,9 +105,9 @@ export default function App() {
       {page === Pages.CONFIRMORDER &&(
         <ConfirmOrder
         barberId = {selectedBarber}
-        haircutId= {selectedHaircut}
+        serviceId= {selectedService}
         onConfirm={() => setPage(Pages.HOME)}
-        goToBack={() => setPage(Pages.SELECTHAIRCUT)}
+        goToBack={() => setPage(Pages.SELECTSERVICE)}
         />
       )}
 
@@ -122,7 +120,7 @@ const styles = StyleSheet.create({
   appContainer: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#1a1a2e',
   },
   title: {
     fontSize: 28,

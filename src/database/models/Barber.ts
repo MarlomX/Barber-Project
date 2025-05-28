@@ -9,22 +9,22 @@ export const createBarberTable = async (db: SQLiteDatabase) => {
         name TEXT NOT NULL
       );
     `);
-
-    // 2. Verifica se a tabela está vazia (sem transação manual)
-    const result = await db.getFirstAsync<{ count: number }>(
-      'SELECT COUNT(id) as count FROM barber;'
-    );
-
-    // 3. Se estiver vazia, insere dados
-    if (result && result.count === 0) {
-      await db.runAsync(
-        'INSERT INTO barber (name) VALUES (?), (?), (?);',
-        ['João Barbeiro', 'Roberto Estilo', 'Felipe Designer']
-      );
-      console.log('Dados iniciais inseridos na tabela barber');
-    }
+  console.log("Tabela barber criada");
   } catch (error) {
     console.error("Erro na criação da tabela barber:", error);
     throw error; // Propaga o erro para debug
+  }
+};
+
+export const populateBarberTable = async(db: SQLiteDatabase) => {
+  try{
+    await db.runAsync(
+      `INSERT INTO barber (name) VALUES (?), (?), (?)`,
+      ['João Silva', "Pedro Andrade", "Marcelo Ferreira"]
+    );
+  console.log("Tabela barber populada");
+  } catch(error) {
+    console.error("Erro ao popular barber");
+    throw error;
   }
 };

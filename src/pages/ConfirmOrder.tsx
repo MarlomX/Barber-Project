@@ -2,29 +2,29 @@ import React, {useEffect, useState} from "react";
 import { View, Text, Pressable, StyleSheet, Alert,ActivityIndicator } from "react-native";
 import db from "../database";
 import { Barber, getBarberForId } from "../database/queries/barberQueries";
-import { Haircut, getHaircutForId } from "../database/queries/haircutQueries";
+import { Service, getServiceForId } from "../database/queries/serviceQueries";
 
 interface Props {
   barberId: number;
-  haircutId: number;
+  serviceId: number;
   onConfirm : () => void;
   goToBack: () => void;
 }
 
-export default function ConfirmOrder({ barberId, haircutId, onConfirm, goToBack }: Props) {
+export default function ConfirmOrder({ barberId, serviceId, onConfirm, goToBack }: Props) {
   const [barber, setBarber] = useState<Barber>(null);
-  const [haircut, setHaircut] = useState<Haircut>(null);
+  const [service, setService] = useState<Service>(null);
   const[loading, setLoading] = useState(true);
 
   useEffect(()=> {
     const loadData = async() => {
       try {
-        const [barberData, hairCutsData] = await Promise.all([
+        const [barberData, serviceData] = await Promise.all([
           getBarberForId(db, barberId),
-          getHaircutForId(db, haircutId)
+          getServiceForId(db, serviceId)
         ]);
         setBarber(barberData || null);
-        setHaircut(hairCutsData);
+        setService(serviceData);
 
       }catch(error){
         console.error("Erro ao caregar dados")
@@ -45,7 +45,7 @@ export default function ConfirmOrder({ barberId, haircutId, onConfirm, goToBack 
     }
 
   const confirm = () => {
-    Alert.alert("Pedido Confirmado", `Barbeiro: ${barber.name}\nCorte: ${haircut.name}\nPreço: ${haircut.price}R$`);
+    Alert.alert("Pedido Confirmado", `Barbeiro: ${barber.name}\nCorte: ${service.name}\nPreço: ${service.price}R$`);
     onConfirm();
   };
 
@@ -53,8 +53,8 @@ export default function ConfirmOrder({ barberId, haircutId, onConfirm, goToBack 
     <View style={styles.container}>
       <Text style={styles.title}>Confirme seu Pedido</Text>
       <Text style={styles.text}>Barbeiro: {barber.name}</Text>
-      <Text style={styles.text}>Corte: {haircut.name}</Text>
-      <Text style={styles.text}>Preço: {haircut.price}R$</Text>
+      <Text style={styles.text}>Corte: {service.name}</Text>
+      <Text style={styles.text}>Preço: {service.price}R$</Text>
       <Pressable style={styles.button} onPress={confirm}>
         <Text style={styles.buttonText}>Confirmar</Text>
       </Pressable>

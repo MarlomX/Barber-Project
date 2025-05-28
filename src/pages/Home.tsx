@@ -1,65 +1,79 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface HomeProps {
   userName: string;
-  onLogout: () => void; // Nova prop
+  onLogout: () => void;
   goToSelectBarber: () => void;
 }
 
-export default function Home({ userName, onLogout, goToSelectBarber  }: HomeProps) {
+export default function Home({ userName, onLogout, goToSelectBarber }: HomeProps) {
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>Bem-vindo, {userName}!</Text>
-      <Text style={styles.text}>
-        Você está logado no sistema da <Text style={styles.bold}>Studio Barber</Text>.
-      </Text>
-      <Pressable style={styles.continueButton} onPress={goToSelectBarber}>        
-        <Text style={styles.buttonText}>Continuar</Text>
-      </Pressable>
-      <Pressable style={styles.logoutButton} onPress={onLogout}>
-        <Text style={styles.buttonText}>Sair</Text>
-      </Pressable>
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Bem-vindo, {userName}!</Text>
+        <Text style={styles.text}>
+          Você está logado no sistema da <Text style={styles.bold}>Studio Barber</Text>.
+        </Text>
+        <Pressable style={styles.continueButton} onPress={goToSelectBarber}>        
+          <Text style={styles.buttonText}>Continuar</Text>
+        </Pressable>
+        <Pressable style={styles.logoutButton} onPress={onLogout}>
+          <Text style={styles.buttonText}>Sair</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
-// Estilos
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1a1a2e",
+  },
   card: {
-    backgroundColor: '#333',
+    width: "85%",
+    backgroundColor: "#16213e",
     padding: 20,
-    borderRadius: 10,
-    width: 300,
-    margin: 20,
-    elevation: 3,
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   title: {
     fontSize: 24,
-    color: '#e0c097',
-    marginBottom: 15,
+    color: "#e94560",
+    marginBottom: 20,
+    textAlign: "center",
+    fontWeight: "bold",
   },
   text: {
-    color: '#fff',
-    marginVertical: 5,
+    color: "#fff",
+    marginBottom: 10,
+    textAlign: "center",
   },
   bold: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
+    color: "#e94560",
   },
   continueButton: {
-    backgroundColor: '#2c09de',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 20,
+    backgroundColor: "#e94560",
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginBottom: 15,
   },
   logoutButton: {
-    backgroundColor: '#ff4444',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 20,
+    backgroundColor: "#0f3460",
+    paddingVertical: 12,
+    borderRadius: 10,
   },
   buttonText: {
-    color: 'white',
-    textAlign: 'center',
-  }
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  }
 });

@@ -1,105 +1,109 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, Alert, StyleSheet } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import db from "../database";
-import { authenticateClient } from "../database/queries/clientQueries";
-
-//criar uma interface que quando chamada envia o usuario para tela de resgistro ou para tela Home
+import { authenticateClient } from "../database/queries/clientQueries";                                                                                                                                                                
 interface LoginProps {
   goToRegister: () => void;
   onSuccess: (name: string) => void;
 }
 
 export default function Login({ goToRegister, onSuccess }: LoginProps) {
-  //define as variaveis para receber o email e a senha
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  //verifica se os capos estão prenchidos
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Erro", "Preencha todos os campos!");
       return;
     }
     try {
-      /* 
-      Tentar autenticar o cliente.
-      Recebe um objeto, o primeiro valor 'success' e um boleano que indica se a authetificação foi um sucesso.
-      Já o segundo valor e uma string, em casso de sucesso estar com o nome do cliente. 
-      No caso de um fracasso e uma menssagem com o motivo do fracasso.
-       */
-      const { success, message} = await authenticateClient(db, email, password);
-      if(success){
+      const { success, message } = await authenticateClient(db, email, password);
+      if (success) {
         onSuccess(message);
       } else {
-          Alert.alert("Erro: ", message);
-        }
+        Alert.alert("Erro: ", message);
+      }
     } catch (error) {
       Alert.alert("Erro", "Falha na autenticação!");
     }
   };
 
-  // visualisação da tela
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-      <Pressable style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Entrar</Text>
-      </Pressable>
-      <Pressable onPress={goToRegister}>
-        <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
-      </Pressable>
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Login</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          placeholderTextColor="#888"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Senha"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          placeholderTextColor="#888"
+        />
+        <Pressable style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Entrar</Text>
+        </Pressable>
+        <Pressable onPress={goToRegister}>
+          <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
-// define os estilos
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1a1a2e",
+  },
   card: {
-    backgroundColor: '#333',
+    width: "85%",
+    backgroundColor: "#16213e",
     padding: 20,
-    borderRadius: 10,
-    width: 300,
-    margin: 20,
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   title: {
-    fontSize: 20,
-    color: '#e0c097',
-    marginBottom: 15,
+    fontSize: 24,
+    color: "#e94560",
+    marginBottom: 20,
+    textAlign: "center",
+    fontWeight: "bold",
   },
   input: {
-    backgroundColor: '#fff',
-    padding: 10,
-    marginVertical: 8,
-    borderRadius: 5,
+    backgroundColor: "#0f3460",
+    color: "#fff",
+    padding: 12,
+    marginBottom: 15,
+    borderRadius: 10,
   },
   button: {
-    backgroundColor: '#e0c097',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
+    backgroundColor: "#e94560",
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginBottom: 15,
   },
   buttonText: {
-    color: '#000',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   link: {
-    color: '#aaa',
-    marginTop: 10,
-    textAlign: 'center',
-  },
+    color: "#e94560",
+    textAlign: "center",
+  },
 });
