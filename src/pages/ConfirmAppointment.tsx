@@ -2,28 +2,37 @@ import React, {useEffect, useState} from "react";
 import { View, Text, Pressable, StyleSheet, Alert,ActivityIndicator } from "react-native";
 import db from "../database";
 import { Barber, getBarberForId } from "../database/queries/barberQueries";
+import { Client, getClientById} from "../database/queries/clientQueries"
 import { Service, getServiceForId } from "../database/queries/serviceQueries";
+import { createAppointment} from "../database/queries/appointmentQueries";
 
 interface Props {
   barberId: number;
+  clientId: number;
   serviceId: number;
+  scheduleId: number;
+  date: string;
+  time_slot: string;
   onConfirm : () => void;
   goToBack: () => void;
 }
 
-export default function ConfirmOrder({ barberId, serviceId, onConfirm, goToBack }: Props) {
+export default function ConfirmAppointment({ barberId, clientId, serviceId, scheduleId, date, time_slot, onConfirm, goToBack }: Props) {
   const [barber, setBarber] = useState<Barber>(null);
+  const [client, setClient] = useState<Client>(null);
   const [service, setService] = useState<Service>(null);
   const[loading, setLoading] = useState(true);
 
   useEffect(()=> {
     const loadData = async() => {
       try {
-        const [barberData, serviceData] = await Promise.all([
+        const [barberData, clientData, serviceData] = await Promise.all([
           getBarberForId(db, barberId),
+          getClientById(db, clientId),
           getServiceForId(db, serviceId)
         ]);
         setBarber(barberData || null);
+        setClient(clientData);
         setService(serviceData);
 
       }catch(error){
@@ -45,7 +54,13 @@ export default function ConfirmOrder({ barberId, serviceId, onConfirm, goToBack 
     }
 
   const confirm = () => {
-    Alert.alert("Pedido Confirmado", `Barbeiro: ${barber.name}\nCorte: ${service.name}\nPreço: ${service.price}R$`);
+    createAppointment(db, barberId, clientId, serviceId, scheduleId, date, time_slot);
+    Alert.alert("Pedido Confirmado", `Barbeiro: ${barber.name}
+      \nCorte: ${service.name}
+      \nPreço: ${service.price}R$
+      \nData: ${date}
+      \nHora: ${time_slot}`
+    );
     onConfirm();
   };
 

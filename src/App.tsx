@@ -5,7 +5,9 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import SelectBarber from "./pages/SelectBarber";
 import SelectService from "./pages/SelectService";
-import ConfirmOrder from "./pages/ConfirmOrder";
+import SelectDate from './pages/SelectDate'
+import SelectTime from "./pages/SelectTime";
+import ConfirmAppointment from "./pages/ConfirmAppointment";
 import { initDB } from "./database";
 
 //Função principal
@@ -18,15 +20,23 @@ export default function App() {
     HOME = "home",
     SELECTBARBER = "SelectBarber",
     SELECTSERVICE ="SelectService",
-    CONFIRMORDER = "ConfirmOrder"
+    SELECTDATE = "SelectDate",
+    SELECTTIME = "SelectTime",
+    CONFIRMAPPOINTMENT = "ConfirmAppointment"
   }
   const [page, setPage] = useState<Pages>(Pages.LOGIN);
 
-  const [userName, setUserName] = useState("");
+  const [selectClient, setSelectClient] = useState<number>();
 
   const [selectedBarber, setSelectedBarber] = useState<number>();  
   
   const [selectedService, setSelectedService] = useState<number>();
+
+  const [selectDate, setSelectDate] = useState<string>();
+
+  const [selectTime, setSelectTime] = useState<string>();
+
+  const [scheduleId, setScheduleId] = useState<number>();
 
   const [isDBInitialized, setIsDBInitialized] = useState(false);
 
@@ -48,17 +58,6 @@ export default function App() {
   initializeDB();
 }, [isDBInitialized]);
 
-  //função caso login for bem sucedido
-  const handleLoginSuccess = (name: string) => {
-    setUserName(name);
-    setPage(Pages.HOME);
-  };
-
-  // função para deslogar o usuario
-  const handleLogout = () => {
-    setPage(Pages.LOGIN);
-    setUserName("");
-  };
 
   // visualisação do aplicativo
   //dependendo do estado da variavel page muda a tela mostrada
@@ -68,8 +67,9 @@ export default function App() {
     
       {page === Pages.LOGIN && (
         <Login 
+          onSelectClient={(clientId) => setSelectClient(clientId)}
           goToRegister={() => setPage(Pages.REGISTER)} 
-          onSuccess={handleLoginSuccess} 
+          onSuccess={() => setPage(Pages.HOME)} 
         />
       )}
       
@@ -79,8 +79,8 @@ export default function App() {
       
       {page === Pages.HOME && (
         <Home 
-        userName={userName} 
-        onLogout={handleLogout}
+        client_id={selectClient} 
+        onLogout={() => setPage(Pages.LOGIN)}
         goToSelectBarber={() => setPage(Pages.SELECTBARBER)}
         />
         )}
@@ -97,17 +97,43 @@ export default function App() {
         <SelectService
         barberId={selectedBarber}
         onSelectService={(serviceId) => setSelectedService(serviceId)}
-        goToConfirmOrder={()=> setPage(Pages.CONFIRMORDER)}
+        goToNext={()=> setPage(Pages.SELECTDATE)}
         goToBack={() => setPage(Pages.SELECTBARBER)}
         />
       )}
 
-      {page === Pages.CONFIRMORDER &&(
-        <ConfirmOrder
+      {page === Pages.SELECTDATE &&(
+        <SelectDate
+        barberId={selectedBarber}
+        onSelectDate={(selectDate) => setSelectDate(selectDate)}
+        goToNext={()=> setPage(Pages.SELECTTIME)}
+        goToBack={()=> setPage(Pages.SELECTSERVICE)}
+        />
+      )}
+
+      {page === Pages.SELECTTIME &&(
+        <SelectTime
+        barberId={selectedBarber}
+        selectedDate={selectDate}
+        onSelectTime={(slot) => {
+      setSelectTime(slot.time_slot);
+      setScheduleId(slot.id);  // ✅ Armazene o ID do slot
+    }}
+        goToNext={()=> setPage(Pages.CONFIRMAPPOINTMENT)}
+        goToBack={()=> setPage(Pages.SELECTDATE)}
+        />
+      )}
+
+      {page === Pages.CONFIRMAPPOINTMENT &&(
+        <ConfirmAppointment
         barberId = {selectedBarber}
+        clientId={selectClient}
         serviceId= {selectedService}
+        scheduleId={scheduleId}
+        date= {selectDate}
+        time_slot= {selectTime}
         onConfirm={() => setPage(Pages.HOME)}
-        goToBack={() => setPage(Pages.SELECTSERVICE)}
+        goToBack={() => setPage(Pages.SELECTTIME)}
         />
       )}
 

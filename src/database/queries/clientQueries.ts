@@ -1,14 +1,14 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
 // Defini uma interface Cliente
-interface Client {
+export interface Client {
     id: number;
     name: string;
     email: string;
     password: string;
   }
   // Define os tipos de retornos das funções
-  type AuthResult = {success: boolean, message: string};
+  type AuthResult = {success: boolean, clientId: number};
   type GetClientResult = Client | undefined;
 
 
@@ -25,6 +25,21 @@ export const getClientByEmail = async (
         return result[0];
     }catch (error) {
         throw new Error('Erro ao procura Cliente pelo Email: ' + error.message);
+    }
+};
+
+export const getClientById = async (
+    db: SQLiteDatabase,
+    id: number
+): Promise<GetClientResult> => {
+    try{
+        const result = await db.getAllAsync<Client>(
+            'SELECT * FROM client WHERE id = ?;',
+             [id]
+        );
+        return result[0];
+    }catch (error) {
+        throw new Error('Erro ao procura Cliente pelo id: ' + error.message);
     }
 };
 
@@ -53,15 +68,11 @@ export const authenticateClient = async(
 ): Promise<AuthResult> =>{
     try{
         const client = await getClientByEmail(db, email);
-        if(client){
-            if (client.password === password){
-                return {success: true, message: client.name};
+            if(client && client.password === password){
+                return {success: true, clientId: client.id};
             } else{
-                return {success: false, message: "Senha Inccoreta"};
+                return {success: false, clientId: 0};
             }
-        } else{
-            return {success: false, message: "Email Inccoreto ou não cadastrado"}
-        }
     } catch(error){
         throw new Error("Erro ao autenticar o Cliente: " + error.message);
     }

@@ -4,10 +4,11 @@ import db from "../database";
 import { authenticateClient } from "../database/queries/clientQueries";                                                                                                                                                                
 interface LoginProps {
   goToRegister: () => void;
-  onSuccess: (name: string) => void;
+  onSelectClient: (client: number) => void;
+  onSuccess: () => void;
 }
 
-export default function Login({ goToRegister, onSuccess }: LoginProps) {
+export default function Login({ goToRegister, onSelectClient, onSuccess }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -17,11 +18,12 @@ export default function Login({ goToRegister, onSuccess }: LoginProps) {
       return;
     }
     try {
-      const { success, message } = await authenticateClient(db, email, password);
+      const { success, clientId } = await authenticateClient(db, email, password);
       if (success) {
-        onSuccess(message);
+        onSelectClient(clientId)
+        onSuccess();
       } else {
-        Alert.alert("Erro: ", message);
+        Alert.alert("Erro: Email ou Senha incorretos");
       }
     } catch (error) {
       Alert.alert("Erro", "Falha na autenticação!");

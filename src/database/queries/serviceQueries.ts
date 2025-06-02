@@ -4,6 +4,7 @@ export interface Service{
     id: number,
     name: string,
     price: number,
+    duration: number,
     barber_id: number
 }
 
@@ -17,6 +18,7 @@ export const getServicesForBarbeId = async(
             s.id, 
             s.name, 
             bs.price, 
+            bs.duration, 
             bs.barber_id 
             FROM service s INNER JOIN barber_service bs 
             ON s.id = bs.service_id 
@@ -37,7 +39,9 @@ export const getServiceForId = async(
             SELECT 
             s.id, 
             s.name, 
-            bs.price 
+            bs.price, 
+            bs.duration,
+            bs.barber_id 
              FROM service s 
              INNER JOIN  barber_service bs
              ON s.id = bs.service_id

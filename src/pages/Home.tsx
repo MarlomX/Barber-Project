@@ -1,17 +1,41 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import db from "../database";
+import { Client, getClientById} from "../database/queries/clientQueries";
 
 interface HomeProps {
-  userName: string;
+  client_id: number;
   onLogout: () => void;
   goToSelectBarber: () => void;
 }
 
-export default function Home({ userName, onLogout, goToSelectBarber }: HomeProps) {
+export default function Home({ client_id, onLogout, goToSelectBarber }: HomeProps) {
+
+  const [client, setClient] = useState<Client | null>(null);
+
+useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [clientData] = await Promise.all([
+          getClientById(db, client_id),
+        ]);
+        setClient(clientData);
+      } catch (error) {
+        console.error("Erro ao carregar dados do cliente:", error);
+      }
+    };
+
+    loadData();
+  }, [client_id]);
+
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Bem-vindo, {userName}!</Text>
+        {client ? (
+          <Text style={styles.title}>Bem-vindo, {client.name}!</Text>
+        ) : (
+          <Text style={styles.title}>Carregando...</Text>
+        )}
         <Text style={styles.text}>
           Você está logado no sistema da <Text style={styles.bold}>Studio Barber</Text>.
         </Text>

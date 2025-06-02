@@ -7,11 +7,11 @@ import { Service, getServicesForBarbeId } from "../database/queries/serviceQueri
 interface Props {
   barberId: number;
   onSelectService: (serviceId: number) => void;
-  goToConfirmOrder: () => void;
+  goToNext: () => void;
   goToBack: () => void;
 }
 
-export default function SelectService({ barberId, onSelectService, goToConfirmOrder, goToBack }: Props) {
+export default function SelectService({ barberId, onSelectService, goToNext, goToBack }: Props) {
   const [barber, setBarber] = useState<Barber | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +75,7 @@ export default function SelectService({ barberId, onSelectService, goToConfirmOr
       <View style={styles.footer}>
         <Pressable
           style={[styles.continueButton, !selectedServiceId && styles.disabledButton]}
-          onPress={goToConfirmOrder}
+          onPress={goToNext}
           disabled={!selectedServiceId}
         >
           <Text style={styles.buttonText}>Continuar</Text>

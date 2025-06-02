@@ -8,6 +8,7 @@ export const createBarberServiceTable = async (db: SQLiteDatabase) => {
         barber_id INTEGER NOT NULL,
         service_id INTEGER NOT NULL,
         price REAL NOT NULL,
+        duration INTEGER DEFAULT 20, -- Duração fixa em minutos
         PRIMARY KEY (barber_id, service_id),
         FOREIGN KEY (barber_id) REFERENCES barber(id),
         FOREIGN KEY (service_id) REFERENCES service(id)
