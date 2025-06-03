@@ -8,6 +8,7 @@ import SelectService from "./pages/SelectService";
 import SelectDate from './pages/SelectDate'
 import SelectTime from "./pages/SelectTime";
 import ConfirmAppointment from "./pages/ConfirmAppointment";
+import HistoryScreen from "./pages/History";
 import { initDB } from "./database";
 
 //Função principal
@@ -22,7 +23,8 @@ export default function App() {
     SELECTSERVICE ="SelectService",
     SELECTDATE = "SelectDate",
     SELECTTIME = "SelectTime",
-    CONFIRMAPPOINTMENT = "ConfirmAppointment"
+    CONFIRMAPPOINTMENT = "ConfirmAppointment",
+    HISTORY = "History"
   }
   const [page, setPage] = useState<Pages>(Pages.LOGIN);
 
@@ -82,6 +84,7 @@ export default function App() {
         client_id={selectClient} 
         onLogout={() => setPage(Pages.LOGIN)}
         goToSelectBarber={() => setPage(Pages.SELECTBARBER)}
+        goToHistory={() => setPage(Pages.HISTORY)}
         />
         )}
 
@@ -117,7 +120,7 @@ export default function App() {
         selectedDate={selectDate}
         onSelectTime={(slot) => {
       setSelectTime(slot.time_slot);
-      setScheduleId(slot.id);  // ✅ Armazene o ID do slot
+      setScheduleId(slot.id); 
     }}
         goToNext={()=> setPage(Pages.CONFIRMAPPOINTMENT)}
         goToBack={()=> setPage(Pages.SELECTDATE)}
@@ -134,6 +137,13 @@ export default function App() {
         time_slot= {selectTime}
         onConfirm={() => setPage(Pages.HOME)}
         goToBack={() => setPage(Pages.SELECTTIME)}
+        />
+      )}
+
+      {page === Pages.HISTORY && (
+        <HistoryScreen
+          clientId = {selectClient}
+          goToBack={() => setPage(Pages.HOME)}
         />
       )}
 

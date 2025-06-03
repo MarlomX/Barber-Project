@@ -1,7 +1,7 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
+
 export interface Appointment {
-    id: number,
     barber_id: number,
     client_id: number,
     service_id: number,
@@ -20,12 +20,29 @@ export const createAppointment  = async(
     time_slot: string,
 ): Promise<void> => {
     try{
-        const result = await db.runAsync(
-            `INSERT INTO appointment (barber_id, client_id, service_id, schedule_id, date, time_slot) VALUES (?, ?, ?, ?, ?);`,
+        await db.runAsync(
+            `INSERT INTO appointment (barber_id, client_id, service_id, schedule_id, date, time_slot) VALUES (?, ?, ?, ?, ?, ?);`,
             [barber_id, client_id, service_id, schedule_id, date, time_slot]
         );
-        console.log(`Agendamento criado: Barber_id: ${barber_id} Client_id : ${client_id} Service_id : ${service_id} Schedule_id : ${schedule_id} Date : ${date} Time_slot : ${time_slot}`);
     } catch (error) {
         throw new Error('Erro ao criar um Servico: ' + error.message);
+    }
+}
+
+export const appointmentsForClientId = async(
+    db: SQLiteDatabase,
+    client_id: number
+): Promise<Appointment[]> => {
+        try{
+        const result = await db.getAllAsync<Appointment>(
+            `SELECT barber_id, client_id, service_id, schedule_id, date, time_slot
+            FROM appointment
+            WHERE client_id = ?
+            ORDER BY date DESC, time_slot DESC;`,
+            [client_id]
+        );
+        return result;
+    } catch (error) {
+        throw new Error('Erro ao buscar Servicos: ' + error.message);
     }
 }

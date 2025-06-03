@@ -7,9 +7,10 @@ interface HomeProps {
   client_id: number;
   onLogout: () => void;
   goToSelectBarber: () => void;
+  goToHistory: () => void;
 }
 
-export default function Home({ client_id, onLogout, goToSelectBarber }: HomeProps) {
+export default function Home({ client_id, onLogout, goToSelectBarber, goToHistory }: HomeProps) {
 
   const [client, setClient] = useState<Client | null>(null);
 
@@ -40,7 +41,10 @@ useEffect(() => {
           Você está logado no sistema da <Text style={styles.bold}>Studio Barber</Text>.
         </Text>
         <Pressable style={styles.continueButton} onPress={goToSelectBarber}>        
-          <Text style={styles.buttonText}>Continuar</Text>
+          <Text style={styles.buttonText}>Agendar</Text>
+        </Pressable>
+        <Pressable style={styles.continueButton} onPress={goToHistory}>        
+          <Text style={styles.buttonText}>Ver Hístorico</Text>
         </Pressable>
         <Pressable style={styles.logoutButton} onPress={onLogout}>
           <Text style={styles.buttonText}>Sair</Text>
