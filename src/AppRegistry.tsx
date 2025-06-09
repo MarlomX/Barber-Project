@@ -9,4 +9,4 @@ const Root = () => (
   </React.StrictMode>
 );
 
-AppRegistry.registerComponent('main', () => Root);
+AppRegistry.registerComponent('barber_project', () => Root);

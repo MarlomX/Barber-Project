@@ -1,44 +1,48 @@
 import { SQLiteDatabase } from 'expo-sqlite';
-import {Appointment,appointmentsForClientId} from './appointmentQueries'
-import {Barber, getBarberForId} from './barberQueries'
-import { Service, getServiceForId } from './serviceQueries';
+import { Appointment, appointmentsByClientId } from './appointmentQueries';
+import { Barber, getBarberById } from './barberQueries';
+import { Service, getServiceById } from './serviceQueries';
 
 export interface HistoryInterface {
-    date: string,
-    time: string,
-    barber: string,
-    service: string,
-    price: string,
+    date: string;
+    time: string;
+    barber: string;
+    service: string;
+    price: string;
 }
 
-export const getHistoryforClientId = async(
+export const getHistoryforClientId = async (
     db: SQLiteDatabase,
-    client_id: number,
+    client_id: number
 ): Promise<HistoryInterface[]> => {
-    try{
+    try {
+        const appointments = await appointmentsByClientId(db, client_id);
         const historyList: HistoryInterface[] = [];
-         const appointments = await appointmentsForClientId(db, client_id) ;
 
-        for (const appointment of appointments) {
-            const barber = await getBarberForId(db, appointment.barber_id);
-            const service = await  getServiceForId(db, appointment.service_id);
+        // Processar cada agendamento em paralelo para melhor desempenho
+        await Promise.all(
+            appointments.map(async (appointment) => {
+                const [barber, service] = await Promise.all([
+                    getBarberById(db, appointment.barber_id),
+                    getServiceById(db, appointment.service_id)
+                ]);
 
-            // Formatar a data para o formato brasileiro DD/MM/AAAA
-            const [year, month, day] = appointment.date.split('-');
-            const formattedDate = `${day}/${month}/${year}`;
+                // Formatar a data para o formato brasileiro DD/MM/AAAA
+                const [year, month, day] = appointment.date.split('-');
+                const formattedDate = `${day}/${month}/${year}`;
 
-            const historyItem: HistoryInterface = {
-                date: formattedDate,
-                time: appointment.time_slot,
-                barber: barber.name,
-                service: service.name,
-                price: `R$ ${service.price.toFixed(2).replace('.', ',')}`
-            };
+                historyList.push({
+                    date: formattedDate,
+                    time: appointment.time_slot,
+                    barber: barber?.name || 'Barbeiro não encontrado',
+                    service: service?.name || 'Serviço não encontrado',
+                    price: `R$ ${service?.price.toFixed(2).replace('.', ',') || '0,00'}`
+                });
+            })
+        );
 
-            historyList.push(historyItem);
-        }
         return historyList;
-    }catch (error) {
-        throw new Error('Erro ao buscar o hístorico do client: ' + error.message);console.error("Erro na validação:", error);
+    } catch (error) {
+        throw new Error('Erro ao buscar histórico do cliente: ' + error.message);
     }
-}
+};

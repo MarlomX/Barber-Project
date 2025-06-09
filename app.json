@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Barber_Project",
-    "slug": "Barber_Project",
+    "name": "barber_project",
+    "slug": "barber_project",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",

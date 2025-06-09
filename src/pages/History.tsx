@@ -25,12 +25,25 @@ export default function HistoryScreen({ goToBack, clientId }: Props) {
   
   const renderItem = ({ item }: { item: HistoryInterface }) => (
     <View style={styles.card}>
-      <Text style={styles.row}><Text style={styles.label}>Data:</Text> {item.date}</Text>
-      <Text style={styles.row}><Text style={styles.label}>Horário:</Text> {item.time}</Text>
-      <Text style={styles.row}><Text style={styles.label}>Barbeiro:</Text> {item.barber}</Text>
-      {/* Corrigido: item.service em vez de item.haircut */}
-      <Text style={styles.row}><Text style={styles.label}>Corte:</Text> {item.service}</Text>
-      <Text style={styles.row}><Text style={styles.label}>Preço:</Text> {item.price}</Text>
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardDate}>{item.date}</Text>
+        <Text style={styles.cardTime}>{item.time}</Text>
+      </View>
+      
+      <View style={styles.cardBody}>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Barbeiro:</Text>
+          <Text style={styles.infoValue}>{item.barber}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Corte:</Text>
+          <Text style={styles.infoValue}>{item.service}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Preço:</Text>
+          <Text style={[styles.infoValue, styles.priceText]}>R$ {item.price}</Text>
+        </View>
+      </View>
     </View>
   );
 
@@ -55,82 +68,76 @@ export default function HistoryScreen({ goToBack, clientId }: Props) {
     loadData();
   }, [clientId]);
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={goToBack}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Histórico de Agendamentos</Text>
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#e94560" />
+          <Text style={styles.centerText}>Carregando histórico...</Text>
         </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text>Carregando histórico...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+      );
+    }
 
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={goToBack}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Histórico de Agendamentos</Text>
-        </View>
-        <View style={styles.errorContainer}>
+    if (error) {
+      return (
+        <View style={styles.centerContainer}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
-      </SafeAreaView>
+      );
+    }
+
+    if (historyList.length === 0) {
+      return (
+        <View style={styles.centerContainer}>
+          <Text style={styles.emptyText}>Nenhum agendamento encontrado</Text>
+        </View>
+      );
+    }
+
+    return (
+      <FlatList
+        data={historyList}
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      />
     );
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={goToBack}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color="#e94560" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Histórico de Agendamentos</Text>
       </View>
 
-      {historyList.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Nenhum agendamento encontrado</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={historyList}
-          keyExtractor={(item, index) => `${item.date}-${item.time}-${index}`}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+      {renderContent()}
     </SafeAreaView>
   );
 }
 
-// Estilos atualizados
+// Estilos atualizados com a paleta de cores
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F2',
+    backgroundColor: "#1a1a2e",
     paddingTop: StatusBar.currentHeight || 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
+    backgroundColor: "#16213e",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#DDD',
+    borderBottomColor: '#0f3460',
     elevation: 4,
-    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
   backButton: {
     padding: 6,
@@ -139,55 +146,83 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#222',
+    color: '#fff',
   },
   listContent: {
     padding: 16,
     paddingBottom: 32,
   },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#16213e",
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#e94560',
     shadowColor: '#000',
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
-  row: {
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#0f3460',
+    paddingBottom: 10,
+    marginBottom: 12,
+  },
+  cardDate: {
     fontSize: 16,
-    marginBottom: 4,
-    color: '#444',
+    fontWeight: '600',
+    color: '#fff',
   },
-  label: {
+  cardTime: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0d8b8b', // Turquesa para contraste
+  },
+  cardBody: {
+    paddingHorizontal: 5,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  infoLabel: {
     fontWeight: 'bold',
-    color: '#000',
+    color: '#e94560',
+    width: 80,
   },
-  loadingContainer: {
+  infoValue: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    color: '#f0f0f0',
   },
-  errorContainer: {
+  priceText: {
+    fontWeight: 'bold',
+    color: '#0d8b8b',
+  },
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
+  centerText: {
+    color: '#f0f0f0',
+    marginTop: 10,
+    fontSize: 16,
+  },
   errorText: {
-    color: 'red',
+    color: '#e94560',
     fontSize: 18,
     textAlign: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontWeight: '500',
   },
   emptyText: {
     fontSize: 18,
-    color: '#666',
+    color: '#888',
+    fontWeight: '500',
   },
 });

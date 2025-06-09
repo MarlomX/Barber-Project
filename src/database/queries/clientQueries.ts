@@ -1,79 +1,98 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
-// Defini uma interface Cliente
+// Interface para representar um Cliente
 export interface Client {
     id: number;
     name: string;
     email: string;
     password: string;
-  }
-  // Define os tipos de retornos das funções
-  type AuthResult = {success: boolean, clientId: number};
-  type GetClientResult = Client | undefined;
+}
 
+// Tipos de retorno para as funções
+type AuthResult = {
+    success: boolean;
+    clientId: number;
+};
 
-  // Busca um cliente no banco de dados pelo Email, retornando uma interface Cliente ou um undefined;
+type GetClientResult = Client | undefined;
+
+/**
+ * Busca um cliente no banco de dados pelo Email
+ * @returns Interface Cliente ou undefined se não encontrado
+ */
 export const getClientByEmail = async (
     db: SQLiteDatabase,
     email: string
 ): Promise<GetClientResult> => {
-    try{
+    try {
         const result = await db.getAllAsync<Client>(
             'SELECT * FROM client WHERE email = ?;',
-             [email]
+            [email]
         );
         return result[0];
-    }catch (error) {
-        throw new Error('Erro ao procura Cliente pelo Email: ' + error.message);
+    } catch (error) {
+        throw new Error('Erro ao procurar cliente pelo email: ' + error.message);
     }
 };
 
+/**
+ * Busca um cliente no banco de dados pelo ID
+ * @returns Interface Cliente ou undefined se não encontrado
+ */
 export const getClientById = async (
     db: SQLiteDatabase,
     id: number
 ): Promise<GetClientResult> => {
-    try{
+    try {
         const result = await db.getAllAsync<Client>(
             'SELECT * FROM client WHERE id = ?;',
-             [id]
+            [id]
         );
         return result[0];
-    }catch (error) {
-        throw new Error('Erro ao procura Cliente pelo id: ' + error.message);
+    } catch (error) {
+        throw new Error('Erro ao procurar cliente pelo ID: ' + error.message);
     }
 };
 
-// Criar um novo cliente na tabela Cliente
-export const createClient = async (db: SQLiteDatabase ,name: string, email:string, password:string) =>{
-    try{
+/**
+ * Cria um novo cliente na tabela Cliente
+ */
+export const createClient = async (
+    db: SQLiteDatabase,
+    name: string,
+    email: string,
+    password: string
+): Promise<void> => {
+    try {
         await db.runAsync(
             'INSERT INTO client (name, email, password) VALUES (?, ?, ?);',
-        [name, email, password]
+            [name, email, password]
         );
-    } catch(error){
-        throw new Error("Erro ao criar um cliente: " + error.message);
+    } catch (error) {
+        throw new Error('Erro ao criar cliente: ' + error.message);
     }
 };
 
-/*
-Recebe um Email e Senha e verifica se eles são validos
-Retorna um objeto, o primeiro valor 'success' e um boleano que indica se a authetificação foi um sucesso.
-Já o segundo valor e uma string, em casso de sucesso estar com o nome do cliente. 
-No caso de um fracasso e uma menssagem com o motivo do fracasso.
-*/
-export const authenticateClient = async(
+/**
+ * Autentica um cliente usando email e senha
+ * @returns Objeto com: 
+ *   - success: booleano indicando se a autenticação foi bem-sucedida
+ *   - clientId: ID do cliente em caso de sucesso, 0 em caso de falha
+ */
+export const authenticateClient = async (
     db: SQLiteDatabase,
-    email:string,
-    password:string,
-): Promise<AuthResult> =>{
-    try{
+    email: string,
+    password: string
+): Promise<AuthResult> => {
+    try {
         const client = await getClientByEmail(db, email);
-            if(client && client.password === password){
-                return {success: true, clientId: client.id};
-            } else{
-                return {success: false, clientId: 0};
-            }
-    } catch(error){
-        throw new Error("Erro ao autenticar o Cliente: " + error.message);
+        
+        if (client && client.password === password) {
+            return { success: true, clientId: client.id };
+        } else {
+            return { success: false, clientId: 0 };
+        }
+    } catch (error) {
+        throw new Error('Erro ao autenticar cliente: ' + error.message);
     }
 };

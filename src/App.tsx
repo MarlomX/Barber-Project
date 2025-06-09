@@ -91,7 +91,7 @@ export default function App() {
       {page === Pages.SELECTBARBER &&(
         <SelectBarber 
         onSelectBarber={(barberId) => setSelectedBarber(barberId)}
-        goToSelectService = {() => setPage(Pages.SELECTSERVICE)}
+        goToNext = {() => setPage(Pages.SELECTSERVICE)}
         goToBack = {() => setPage(Pages.HOME)}
         />
       )}
