@@ -10,7 +10,6 @@ import {
   StatusBar
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import db from "../database";
 import { getAllBarbers, Barber } from "../database/queries/barberQueries";
 
 interface Props {
@@ -28,7 +27,7 @@ export default function SelectBarber({ onSelectBarber, goToNext, goToBack }: Pro
   useEffect(() => {
     const loadBarbers = async () => {
       try {
-        const data = await getAllBarbers(db);
+        const data = await getAllBarbers();
         setBarbers(data);
         setError(null);
       } catch (error) {

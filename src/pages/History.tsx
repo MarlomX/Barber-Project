@@ -10,7 +10,6 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import db from '../database';
 import { HistoryInterface, getHistoryforClientId } from '../database/queries/historyQueries';
 
 interface Props {
@@ -54,7 +53,7 @@ export default function HistoryScreen({ goToBack, clientId }: Props) {
           throw new Error("ID do cliente não fornecido");
         }
         
-        const historyData = await getHistoryforClientId(db, clientId);
+        const historyData = await getHistoryforClientId(clientId);
         setHistoryList(historyData);
         setError(null);
       } catch (error) {

@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { 
-  Alert, 
   Pressable, 
   StyleSheet, 
   Text, 
@@ -8,10 +7,11 @@ import {
   View,
   SafeAreaView,
   StatusBar,
-  ActivityIndicator
+  ActivityIndicator,
+  Animated,
+  Modal
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import db from "../database";
 import { getClientByEmail, createClient } from "../database/queries/clientQueries";
 
 interface RegisterProps {
@@ -25,6 +25,15 @@ export default function Register({ goToLogin }: RegisterProps) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{name?: string; email?: string; password?: string}>({});
+  
+  // Estados para os modais
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showError, setShowError] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  
+  // Animações
+  const fadeErrorAnim = useRef(new Animated.Value(0)).current;
+  const fadeSuccessAnim = useRef(new Animated.Value(0)).current;
 
   // Função para validar email com regex
   const validateEmail = (email: string) => {
@@ -56,24 +65,62 @@ export default function Register({ goToLogin }: RegisterProps) {
     return Object.keys(newErrors).length === 0;
   };
 
+  const showErrorModal = (message: string) => {
+    setErrorMessage(message);
+    setShowError(true);
+    Animated.timing(fadeErrorAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeErrorModal = () => {
+    Animated.timing(fadeErrorAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowError(false);
+    });
+  };
+
+  const showSuccessModal = () => {
+    setShowSuccess(true);
+    Animated.timing(fadeSuccessAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeSuccessModal = () => {
+    Animated.timing(fadeSuccessAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowSuccess(false);
+      goToLogin(); // Redireciona para o login após fechar
+    });
+  };
+
   const handleRegister = async () => {
     if (!validateFields()) return;
 
     try {
       setLoading(true);
       
-      if (await getClientByEmail(db, email)) {
-        Alert.alert("Erro", "Este email já está cadastrado!");
+      if (await getClientByEmail(email)) {
+        showErrorModal("Este email já está cadastrado!");
         return;
       }
 
-      await createClient(db, name, email, password);
-      Alert.alert("Sucesso", "Cadastro realizado com sucesso!", [
-        { text: "OK", onPress: goToLogin }
-      ]);
+      await createClient(name, email, password);
+      showSuccessModal();
       
     } catch (error) {
-      Alert.alert("Erro", "Falha ao cadastrar. Tente novamente.");
+      showErrorModal("Falha ao cadastrar. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -162,6 +209,75 @@ export default function Register({ goToLogin }: RegisterProps) {
           <Text style={styles.link}>Já tem conta? <Text style={styles.linkBold}>Faça login</Text></Text>
         </Pressable>
       </View>
+
+       <Modal
+        visible={showError}
+        transparent={true}
+        animationType="none"
+        onRequestClose={closeErrorModal}
+      >
+        <Animated.View 
+          style={[
+            styles.errorOverlay, 
+            { 
+              opacity: fadeErrorAnim,
+            }
+          ]}
+        >
+          <View style={styles.errorModal}>
+            <Ionicons 
+              name="close-circle" 
+              size={60} 
+              color="#e94560" 
+              style={styles.errorIcon}
+            />
+            <Text style={styles.errorTitle}>Erro</Text>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+            
+            <Pressable 
+              style={styles.errorButton} 
+              onPress={closeErrorModal}
+            >
+              <Text style={styles.errorButtonText}>OK</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </Modal>
+
+      {/* Modal de Sucesso usando o componente Modal */}
+      <Modal
+        visible={showSuccess}
+        transparent={true}
+        animationType="none"
+        onRequestClose={closeSuccessModal}
+      >
+        <Animated.View 
+          style={[
+            styles.successOverlay, 
+            { 
+              opacity: fadeSuccessAnim,
+            }
+          ]}
+        >
+          <View style={styles.successModal}>
+            <Ionicons 
+              name="checkmark-circle" 
+              size={60} 
+              color="#4BB543" 
+              style={styles.successIcon}
+            />
+            <Text style={styles.successTitle}>Sucesso!</Text>
+            <Text style={styles.successText}>Cadastro realizado com sucesso</Text>
+            
+            <Pressable 
+              style={styles.successButton} 
+              onPress={closeSuccessModal}
+            >
+              <Text style={styles.successButtonText}>Continuar</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -254,10 +370,104 @@ const styles = StyleSheet.create({
     color: "#e94560",
     fontWeight: "bold",
   },
-  errorText: {
-    color: "#ff6b6b",
+  // Estilos para o modal de erro
+  errorOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorModal: {
+    backgroundColor: '#16213e',
+    borderRadius: 20,
+    padding: 25,
+    width: '85%',
+    maxWidth: 350,
+    borderWidth: 2,
+    borderColor: '#e94560',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  errorIcon: {
     marginBottom: 15,
-    fontSize: 14,
-    marginLeft: 10,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#e94560',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  errorText: {
+    color: '#f0f0f0',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  errorButton: {
+    backgroundColor: '#e94560',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  errorButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  // Estilos para o modal de sucesso
+  successOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successModal: {
+    backgroundColor: '#16213e',
+    borderRadius: 20,
+    padding: 25,
+    width: '85%',
+    maxWidth: 350,
+    borderWidth: 2,
+    borderColor: '#0d8b8b',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  successIcon: {
+    marginBottom: 15,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#0d8b8b',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  successText: {
+    color: '#f0f0f0',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  successButton: {
+    backgroundColor: '#0d8b8b',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  successButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

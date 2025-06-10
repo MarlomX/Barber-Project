@@ -1,4 +1,4 @@
-import { SQLiteDatabase } from 'expo-sqlite';
+import { supabase } from "../supabase";
 
 export interface RawTimeSlot {
   id: number;
@@ -12,18 +12,17 @@ export interface TimeSlot extends RawTimeSlot {
 }
 
 export const getDayOfWeekDisponible = async (
-  db: SQLiteDatabase,
   barber_id: number
 ): Promise<number[]> => {
   try {
-    const result = await db.getAllAsync<{ day_of_week: number }>(
-      `SELECT DISTINCT day_of_week 
-       FROM barber_schedule 
-       WHERE barber_id = ?;`,
-      [barber_id]
-    );
+    const {data, error} = await supabase
+    .from(`barber_schedule`)
+    .select(`day_of_week`)
+    .eq(`barber_id`, barber_id);
 
-    return result.map(row => row.day_of_week);
+    if (error) throw error;
+
+    return data.map(row => row.day_of_week);
   } catch (error) {
     console.error("Erro ao buscar dias disponíveis:", error);
     return [];
@@ -31,27 +30,35 @@ export const getDayOfWeekDisponible = async (
 };
 
 export const getAllSlotsTheDay = async (
-  db: SQLiteDatabase,
   barber_id: number,
   day_of_week: number,
   selectedDate: string
 ): Promise<TimeSlot[]> => {
   try {
     // Buscar todos os slots para o barbeiro e dia da semana
-    const result = await db.getAllAsync<RawTimeSlot>(
-      `SELECT id, barber_id, day_of_week, time_slot
-       FROM barber_schedule 
-       WHERE barber_id = ? 
-         AND day_of_week = ?;`, 
-      [barber_id, day_of_week]
-    ); 
+    const {data, error} =  await supabase
+    .from(`barber_schedule`)
+    .select(`*`)
+    .eq(`barber_id`, barber_id)
+    .eq(`day_of_week`, day_of_week);
+
+    if (error) throw error;
     
     // Validar disponibilidade de cada slot
-    const validatedSlots = await Promise.all(
-      result.map(slot => validateSlot(db, slot, selectedDate))
-    );
+    const appointments = await getAppointmentsForDate(barber_id, selectedDate);
     
-    // Filtrar apenas os slots disponíveis
+    // Validar disponibilidade
+    const validatedSlots = data.map(slot => {
+      const isAvailable = !appointments.some(
+        app => app.time_slot === slot.time_slot
+      );
+      
+      return {
+        ...slot,
+        is_available: isAvailable
+      };
+    });
+
     return validatedSlots.filter(slot => slot.is_available);
   } catch (error) {
     console.error("Erro ao buscar slots:", error);
@@ -59,31 +66,20 @@ export const getAllSlotsTheDay = async (
   }
 }
 
-const validateSlot = async (
-  db: SQLiteDatabase,
-  timeSlot: RawTimeSlot,
-  currentDate: string
-): Promise<TimeSlot> => {
+const getAppointmentsForDate = async (
+  barber_id: number, 
+  date: string
+) => {
   try {
-    // Verificar se já existe um agendamento para este slot
-    const result = await db.getFirstAsync<{ count: number }>(
-      `SELECT COUNT(*) as count 
-       FROM appointment  
-       WHERE barber_id = ? 
-         AND date = ? 
-         AND time_slot = ?;`,
-      [timeSlot.barber_id, currentDate, timeSlot.time_slot]
-    );
-    
-    return { 
-      ...timeSlot,
-      is_available: result?.count === 0
-    };
+    const { data, error } = await supabase
+      .from(`appointment`)
+      .select(`time_slot`)
+      .eq(`barber_id`, barber_id)
+      .eq(`date`, date);
+
+    return error ? [] : data;
   } catch (error) {
-    console.error("Erro na validação do slot:", error);
-    return { 
-      ...timeSlot, 
-      is_available: false 
-    };
+    console.error("Erro ao buscar agendamentos:", error);
+    return [];
   }
 };

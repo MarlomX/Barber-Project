@@ -10,7 +10,6 @@ import {
   StatusBar
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import db from "../database";
 import { getAllSlotsTheDay, TimeSlot } from "../database/queries/scheduleQuerry";
 
 interface Props {
@@ -39,7 +38,7 @@ export default function SelectTime({ barberId, selectedDate, onSelectTime, goToN
         
         const jsDayOfWeek = localDate.getDay();
         
-        const slots = await getAllSlotsTheDay(db, barberId, jsDayOfWeek, selectedDate);
+        const slots = await getAllSlotsTheDay(barberId, jsDayOfWeek, selectedDate);
         setTimeSlots(slots);
         
         if (slots.length === 0) {

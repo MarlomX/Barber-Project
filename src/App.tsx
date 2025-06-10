@@ -9,7 +9,6 @@ import SelectDate from './pages/SelectDate'
 import SelectTime from "./pages/SelectTime";
 import ConfirmAppointment from "./pages/ConfirmAppointment";
 import HistoryScreen from "./pages/History";
-import { initDB } from "./database";
 
 //Função principal
 export default function App() {
@@ -41,25 +40,6 @@ export default function App() {
   const [scheduleId, setScheduleId] = useState<number>();
 
   const [isDBInitialized, setIsDBInitialized] = useState(false);
-
-
- // Inicialização do banco de dados
- useEffect(() => {
-  const initializeDB = async () => {
-    if (!isDBInitialized){
-      try {
-        await initDB(); // Aguarde a conclusão
-        setIsDBInitialized(true);
-        console.log("Banco de dados iniciado com sucesso")
-      } catch(error){
-        console.error("Erro ao iniciar o banco de dados: ", error)
-      }
-    }
-  };
-  
-  initializeDB();
-}, [isDBInitialized]);
-
 
   // visualisação do aplicativo
   //dependendo do estado da variavel page muda a tela mostrada

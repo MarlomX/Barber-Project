@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // Adicione useRef aqui
 import { 
   View, 
   Text, 
@@ -8,10 +8,10 @@ import {
   ActivityIndicator,
   SafeAreaView,
   StatusBar,
-  ScrollView
+  ScrollView,
+  Animated 
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import db from "../database";
 import { Barber, getBarberById } from "../database/queries/barberQueries";
 import { Client, getClientById } from "../database/queries/clientQueries";
 import { Service, getServiceById } from "../database/queries/serviceQueries";
@@ -43,21 +43,42 @@ export default function ConfirmAppointment({
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current; // Corrigido com useRef
+
+  const showConfirmationModal = () => {
+    setShowSuccess(true);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleConfirm = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowSuccess(false);
+      onConfirm();
+    });
+  };
 
   useEffect(() => {
     const loadData = async() => {
       try {
         setLoading(true);
         const [barberData, clientData, serviceData] = await Promise.all([
-          getBarberById(db, barberId),
-          getClientById(db, clientId),
-          getServiceById(db, serviceId)
+          getBarberById(barberId),
+          getClientById(clientId),
+          getServiceById(serviceId)
         ]);
         
         setBarber(barberData || null);
         setClient(clientData);
         setService(serviceData);
-
       } catch(error) {
         console.error("Erro ao carregar dados:", error);
         Alert.alert("Erro", "Não foi possível carregar os dados do agendamento");
@@ -79,7 +100,6 @@ export default function ConfirmAppointment({
       setIsConfirming(true);
       
       await createAppointment(
-        db, 
         barberId, 
         clientId, 
         serviceId, 
@@ -87,16 +107,7 @@ export default function ConfirmAppointment({
         date, 
         time_slot
       );
-      
-      Alert.alert(
-        "Agendamento Confirmado!",
-        `Barbeiro: ${barber?.name || ''}\n` +
-        `Corte: ${service?.name || ''}\n` +
-        `Preço: R$ ${service?.price?.toFixed(2) || '0.00'}\n` +
-        `Data: ${formatDate(date)}\n` +
-        `Hora: ${time_slot}`,
-        [{ text: "OK", onPress: onConfirm }]
-      );
+      showConfirmationModal();
       
     } catch (error) {
       console.error("Erro ao confirmar agendamento:", error);
@@ -119,15 +130,22 @@ export default function ConfirmAppointment({
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={goToBack}>
-          <Ionicons name="arrow-back" size={28} color="#e94560" />
-        </Pressable>
-        <Text style={styles.title}>Confirmação</Text>
-      </View>
+      {/* Header - removido completamente quando showSuccess=true */}
+      {!showSuccess && (
+        <View style={styles.header}>
+          <Pressable style={styles.backButton} onPress={goToBack}>
+            <Ionicons name="arrow-back" size={28} color="#e94560" />
+          </Pressable>
+          <Text style={styles.title}>Confirmação</Text>
+        </View>
+      )}
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.sectionTitle}>Detalhes do Agendamento</Text>
+      {/* Conteúdo principal - completamente escondido no sucesso */}
+    {!showSuccess && (
+      <>
+
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={styles.sectionTitle}>Detalhes do Agendamento</Text>
         
         <View style={styles.detailCard}>
           <View style={styles.detailRow}>
@@ -162,25 +180,72 @@ export default function ConfirmAppointment({
             <Text style={styles.detailValue}>{time_slot}</Text>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
 
-      <View style={styles.footer}>
-        <Pressable 
-          style={({ pressed }) => [
-            styles.confirmButton,
-            pressed && styles.buttonPressed,
-            isConfirming && styles.disabledButton
+      {/* Botão de confirmação - removido quando modal aberto */}
+        <View style={styles.footer}>
+          <Pressable 
+            style={({ pressed }) => [
+              styles.confirmButton,
+              pressed && styles.buttonPressed,
+              isConfirming && styles.disabledButton
+            ]}
+            onPress={confirmAppointment}
+            disabled={isConfirming}
+          >
+            {isConfirming ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.footerButtonText}>Confirmar Agendamento</Text>
+            )}
+          </Pressable>
+        </View>
+        </>
+      )}
+
+      {/* Modal de Sucesso com zIndex aumentado e fundo mais escuro */}
+      {showSuccess && (
+        <Animated.View 
+          style={[
+            styles.successOverlay, 
+            { 
+              opacity: fadeAnim,
+            }
           ]}
-          onPress={confirmAppointment}
-          disabled={isConfirming}
         >
-          {isConfirming ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.footerButtonText}>Confirmar Agendamento</Text>
-          )}
-        </Pressable>
-      </View>
+          <View style={styles.successModal}>
+            <Ionicons 
+              name="checkmark-circle" 
+              size={70} 
+              color="#4BB543" 
+              style={styles.successIcon}
+            />
+            <Text style={styles.successTitle}>Agendamento Confirmado!</Text>
+            
+            <View style={styles.successDetails}>
+              <Text style={styles.successText}>
+                <Text style={styles.successLabel}>Barbeiro:</Text> {barber?.name || 'N/A'}
+              </Text>
+              <Text style={styles.successText}>
+                <Text style={styles.successLabel}>Serviço:</Text> {service?.name || 'N/A'}
+              </Text>
+              <Text style={styles.successText}>
+                <Text style={styles.successLabel}>Data:</Text> {formatDate(date)} às {time_slot}
+              </Text>
+              <Text style={styles.successText}>
+                <Text style={styles.successLabel}>Valor:</Text> R$ {service?.price?.toFixed(2) || '0.00'}
+              </Text>
+            </View>
+            
+            <Pressable 
+              style={styles.successButton} 
+              onPress={handleConfirm}
+            >
+              <Text style={styles.successButtonText}>Voltar para Início</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -303,5 +368,78 @@ const styles = StyleSheet.create({
     color: '#f0f0f0',
     marginTop: 15,
     fontSize: 16,
+  },
+  successOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+    backgroundColor: 'transparent',
+  },
+  successModal: {
+    backgroundColor: '#1e2a3b',
+    borderRadius: 20,
+    padding: 25,
+    width: '90%',
+    maxWidth: 400,
+    borderWidth: 2,
+    borderColor: '#0d8b8b',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  successIcon: {
+    marginBottom: 15,
+  },
+  successTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#4BB543',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  successDetails: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  successText: {
+    color: '#f0f0f0',
+    fontSize: 16,
+    marginVertical: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2c3e50',
+  },
+  successLabel: {
+    fontWeight: 'bold',
+    color: '#e94560',
+  },
+  successButton: {
+    backgroundColor: '#0d8b8b',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  successButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  blurBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    zIndex: 99,
   },
 });

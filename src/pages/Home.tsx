@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View, ActivityIndicator } from "react-native";
-import db from "../database";
 import { Client, getClientById } from "../database/queries/clientQueries";
 
 interface HomeProps {
@@ -17,7 +16,7 @@ export default function Home({ client_id, onLogout, goToSelectBarber, goToHistor
   useEffect(() => {
     const loadData = async () => {
       try {
-        const clientData = await getClientById(db, client_id);
+        const clientData = await getClientById(client_id);
         setClient(clientData);
       } catch (error) {
         console.error("Erro ao carregar dados do cliente:", error);

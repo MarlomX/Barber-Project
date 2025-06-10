@@ -10,9 +10,8 @@ import {
   StatusBar
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import db from "../database";
 import { Barber, getBarberById } from "../database/queries/barberQueries";
-import { Service, getServicesForBarbeId } from "../database/queries/serviceQueries";
+import { Service, getServicesForBarberId } from "../database/queries/serviceQueries";
 
 interface Props {
   barberId: number;
@@ -35,8 +34,8 @@ export default function SelectService({ barberId, onSelectService, goToNext, goT
         setError(null);
         
         const [barberData, servicesData] = await Promise.all([
-          getBarberById(db, barberId),
-          getServicesForBarbeId(db, barberId)
+          getBarberById(barberId),
+          getServicesForBarberId(barberId)
         ]);
         
         if (!barberData) {

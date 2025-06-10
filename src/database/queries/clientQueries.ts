@@ -1,4 +1,5 @@
-import { SQLiteDatabase } from 'expo-sqlite';
+import { supabase } from '../supabase';
+
 
 // Interface para representar um Cliente
 export interface Client {
@@ -21,15 +22,20 @@ type GetClientResult = Client | undefined;
  * @returns Interface Cliente ou undefined se não encontrado
  */
 export const getClientByEmail = async (
-    db: SQLiteDatabase,
     email: string
 ): Promise<GetClientResult> => {
     try {
-        const result = await db.getAllAsync<Client>(
-            'SELECT * FROM client WHERE email = ?;',
-            [email]
-        );
-        return result[0];
+        const {data, error } = await supabase
+        .from('client')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+        if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+
+        return data || undefined;
     } catch (error) {
         throw new Error('Erro ao procurar cliente pelo email: ' + error.message);
     }
@@ -40,15 +46,20 @@ export const getClientByEmail = async (
  * @returns Interface Cliente ou undefined se não encontrado
  */
 export const getClientById = async (
-    db: SQLiteDatabase,
     id: number
 ): Promise<GetClientResult> => {
     try {
-        const result = await db.getAllAsync<Client>(
-            'SELECT * FROM client WHERE id = ?;',
-            [id]
-        );
-        return result[0];
+        const {data, error} = await supabase
+        .from('client')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+        if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+
+        return data || undefined;
     } catch (error) {
         throw new Error('Erro ao procurar cliente pelo ID: ' + error.message);
     }
@@ -58,16 +69,16 @@ export const getClientById = async (
  * Cria um novo cliente na tabela Cliente
  */
 export const createClient = async (
-    db: SQLiteDatabase,
     name: string,
     email: string,
     password: string
 ): Promise<void> => {
     try {
-        await db.runAsync(
-            'INSERT INTO client (name, email, password) VALUES (?, ?, ?);',
-            [name, email, password]
-        );
+        const {error} = await supabase
+        .from('client')
+        .insert([{name, email, password}])
+        
+        if (error) throw error;
     } catch (error) {
         throw new Error('Erro ao criar cliente: ' + error.message);
     }
@@ -80,12 +91,11 @@ export const createClient = async (
  *   - clientId: ID do cliente em caso de sucesso, 0 em caso de falha
  */
 export const authenticateClient = async (
-    db: SQLiteDatabase,
     email: string,
     password: string
 ): Promise<AuthResult> => {
     try {
-        const client = await getClientByEmail(db, email);
+        const client = await getClientByEmail(email);
         
         if (client && client.password === password) {
             return { success: true, clientId: client.id };

@@ -10,7 +10,6 @@ import {
   StatusBar
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import db from "../database";
 import { getDayOfWeekDisponible } from "../database/queries/scheduleQuerry";
 
 interface Props {
@@ -32,7 +31,7 @@ export default function SelectDate({ barberId, onSelectDate, goToNext, goToBack 
         setLoading(true);
         setError(null);
         
-        const days = await getDayOfWeekDisponible(db, barberId);
+        const days = await getDayOfWeekDisponible(barberId);
         setAvailableDays(days || []);
       } catch (error) {
         console.error("Erro ao carregar dias disponíveis:", error);

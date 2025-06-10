@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { 
-  Alert, 
   Pressable, 
   StyleSheet, 
   Text, 
@@ -8,10 +7,11 @@ import {
   View,
   SafeAreaView,
   StatusBar,
-  ActivityIndicator
+  ActivityIndicator,
+  Animated,
+  Modal
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
-import db from "../database";
 import { authenticateClient } from "../database/queries/clientQueries";
 
 interface LoginProps {
@@ -25,28 +25,51 @@ export default function Login({ goToRegister, onSelectClient, onSuccess }: Login
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showError, setShowError] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Erro", "Preencha todos os campos!");
+      showErrorModal("Preencha todos os campos!");
       return;
     }
     
     try {
       setLoading(true);
-      const { success, clientId } = await authenticateClient(db, email, password);
+      const { success, clientId } = await authenticateClient(email, password);
       
       if (success) {
         onSelectClient(clientId);
         onSuccess();
       } else {
-        Alert.alert("Erro", "Email ou senha incorretos");
+        showErrorModal("Email ou senha incorretos");
       }
     } catch (error) {
-      Alert.alert("Erro", "Falha na autenticação. Tente novamente.");
+      showErrorModal("Falha na autenticação. Tente novamente.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const showErrorModal = (message: string) => {
+    setErrorMessage(message);
+    setShowError(true);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeErrorModal = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowError(false);
+    });
   };
 
   return (
@@ -114,6 +137,41 @@ export default function Login({ goToRegister, onSelectClient, onSuccess }: Login
           <Text style={styles.link}>Não tem conta? <Text style={styles.linkBold}>Cadastre-se</Text></Text>
         </Pressable>
       </View>
+
+       {/* Modal de Erro - deve ficar por cima de tudo */}
+    <Modal
+      visible={showError}
+      transparent={true}
+      animationType="none" // Usaremos nossa própria animação
+      onRequestClose={closeErrorModal}
+    >
+        <Animated.View 
+          style={[
+            styles.errorOverlay, 
+            { 
+              opacity: fadeAnim,
+            }
+          ]}
+        >
+          <View style={styles.errorModal}>
+            <Ionicons 
+              name="close-circle" 
+              size={60} 
+              color="#e94560" 
+              style={styles.errorIcon}
+            />
+            <Text style={styles.errorTitle}>Erro</Text>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+            
+            <Pressable 
+              style={styles.errorButton} 
+              onPress={closeErrorModal}
+            >
+              <Text style={styles.errorButtonText}>OK</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -205,5 +263,55 @@ const styles = StyleSheet.create({
   linkBold: {
     color: "#e94560",
     fontWeight: "bold",
+  },
+  // Estilos para o modal de erro
+  errorOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorModal: {
+    backgroundColor: '#16213e',
+    borderRadius: 20,
+    padding: 25,
+    width: '85%',
+    maxWidth: 350,
+    borderWidth: 2,
+    borderColor: '#e94560',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  errorIcon: {
+    marginBottom: 15,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#e94560',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  errorText: {
+    color: '#f0f0f0',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  errorButton: {
+    backgroundColor: '#e94560',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  errorButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

@@ -1,4 +1,4 @@
-import { SQLiteDatabase } from 'expo-sqlite';
+import { supabase } from '../supabase';
 
 export interface Barber {
     id: number;
@@ -6,28 +6,36 @@ export interface Barber {
 }
 
 export const getAllBarbers = async (
-    db: SQLiteDatabase
 ): Promise<Barber[]> => {
     try {
-        const result = await db.getAllAsync<Barber>(
-            'SELECT id, name FROM barber;'
-        );
-        return result || [];
+        const {data, error} = await supabase
+        .from('barber')
+        .select('*');
+
+        if (error) {
+            throw error;
+        }
+        return data || undefined;
     } catch (error) {
         throw new Error('Erro ao buscar todos os barbeiros: ' + error.message);
     }
 }
 
 export const getBarberById = async (
-    db: SQLiteDatabase,
     id: number
 ): Promise<Barber | undefined> => {
     try {
-        const result = await db.getFirstAsync<Barber>(
-            'SELECT id, name FROM barber WHERE id = ?;',
-            [id]
-        );
-        return result;
+        const {data, error} = await supabase
+        .from('barber')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+         if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+
+        return data || undefined;
     } catch (error) {
         throw new Error('Erro ao buscar um barbeiro: ' + error.message);
     }
