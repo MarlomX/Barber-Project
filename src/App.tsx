@@ -1,64 +1,132 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
-import * as SQLite from 'expo-sqlite';
-import { useEffect } from 'react';
-
-// Criar uma variavel que abre o Banco de dados
-const db = SQLite.openDatabaseSync('BarberDB.db');
+import SelectBarber from "./pages/SelectBarber";
+import SelectService from "./pages/SelectService";
+import SelectDate from './pages/SelectDate'
+import SelectTime from "./pages/SelectTime";
+import ConfirmAppointment from "./pages/ConfirmAppointment";
+import HistoryScreen from "./pages/History";
 
 //Função principal
 export default function App() {
   // Amarzena qual tela sera mostrada para o usuario e começa definindo a pagina de login como a inicial
-  const [page, setPage] = useState<"login" | "register" | "home">("login");
-  const [userName, setUserName] = useState("");
+  
+  enum Pages {
+    LOGIN = "Login",
+    REGISTER = "register",
+    HOME = "home",
+    SELECTBARBER = "SelectBarber",
+    SELECTSERVICE ="SelectService",
+    SELECTDATE = "SelectDate",
+    SELECTTIME = "SelectTime",
+    CONFIRMAPPOINTMENT = "ConfirmAppointment",
+    HISTORY = "History"
+  }
+  const [page, setPage] = useState<Pages>(Pages.LOGIN);
 
- // Configura o banco de dados garantindo a existencia da tabela cliente
-  useEffect(() => {
-    db.execSync(`
-      CREATE TABLE IF NOT EXISTS cliente (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        senha TEXT NOT NULL
-      );
-    `);
-  }, []);
+  const [selectClient, setSelectClient] = useState<number>();
 
-  //função caso login for bem sucedido
-  const handleLoginSuccess = (name: string) => {
-    setUserName(name);
-    setPage("home");
-  };
+  const [selectedBarber, setSelectedBarber] = useState<number>();  
+  
+  const [selectedService, setSelectedService] = useState<number>();
 
-  // função para deslogar o usuario
-  const handleLogout = () => {
-    setPage("login");
-    setUserName("");
-  };
+  const [selectDate, setSelectDate] = useState<string>();
+
+  const [selectTime, setSelectTime] = useState<string>();
+
+  const [scheduleId, setScheduleId] = useState<number>();
+
+  const [isDBInitialized, setIsDBInitialized] = useState(false);
 
   // visualisação do aplicativo
   //dependendo do estado da variavel page muda a tela mostrada
   return (
     //
     <View style={styles.appContainer}>
-      <Text style={styles.title}>Barber Studio 💈</Text>
-
     
-      {page === "login" && (
+      {page === Pages.LOGIN && (
         <Login 
-          goToRegister={() => setPage("register")} 
-          onSuccess={handleLoginSuccess} 
+          onSelectClient={(clientId) => setSelectClient(clientId)}
+          goToRegister={() => setPage(Pages.REGISTER)} 
+          onSuccess={() => setPage(Pages.HOME)} 
         />
       )}
       
-      {page === "register" && (
-        <Register goToLogin={() => setPage("login")} />
+      {page === Pages.REGISTER && (
+        <Register goToLogin={() => setPage(Pages.LOGIN)} />
       )}
       
-      {page === "home" && <Home userName={userName} onLogout={handleLogout} />}
+      {page === Pages.HOME && (
+        <Home 
+        client_id={selectClient} 
+        onLogout={() => setPage(Pages.LOGIN)}
+        goToSelectBarber={() => setPage(Pages.SELECTBARBER)}
+        goToHistory={() => setPage(Pages.HISTORY)}
+        />
+        )}
+
+      {page === Pages.SELECTBARBER &&(
+        <SelectBarber 
+        onSelectBarber={(barberId) => setSelectedBarber(barberId)}
+        goToNext = {() => setPage(Pages.SELECTSERVICE)}
+        goToBack = {() => setPage(Pages.HOME)}
+        />
+      )}
+
+      {page === Pages.SELECTSERVICE &&(
+        <SelectService
+        barberId={selectedBarber}
+        onSelectService={(serviceId) => setSelectedService(serviceId)}
+        goToNext={()=> setPage(Pages.SELECTDATE)}
+        goToBack={() => setPage(Pages.SELECTBARBER)}
+        />
+      )}
+
+      {page === Pages.SELECTDATE &&(
+        <SelectDate
+        barberId={selectedBarber}
+        onSelectDate={(selectDate) => setSelectDate(selectDate)}
+        goToNext={()=> setPage(Pages.SELECTTIME)}
+        goToBack={()=> setPage(Pages.SELECTSERVICE)}
+        />
+      )}
+
+      {page === Pages.SELECTTIME &&(
+        <SelectTime
+        barberId={selectedBarber}
+        selectedDate={selectDate}
+        onSelectTime={(slot) => {
+      setSelectTime(slot.time_slot);
+      setScheduleId(slot.id); 
+    }}
+        goToNext={()=> setPage(Pages.CONFIRMAPPOINTMENT)}
+        goToBack={()=> setPage(Pages.SELECTDATE)}
+        />
+      )}
+
+      {page === Pages.CONFIRMAPPOINTMENT &&(
+        <ConfirmAppointment
+        barberId = {selectedBarber}
+        clientId={selectClient}
+        serviceId= {selectedService}
+        scheduleId={scheduleId}
+        date= {selectDate}
+        time_slot= {selectTime}
+        onConfirm={() => setPage(Pages.HOME)}
+        goToBack={() => setPage(Pages.SELECTTIME)}
+        />
+      )}
+
+      {page === Pages.HISTORY && (
+        <HistoryScreen
+          clientId = {selectClient}
+          goToBack={() => setPage(Pages.HOME)}
+        />
+      )}
+
     </View>
   );
 }
@@ -68,7 +136,7 @@ const styles = StyleSheet.create({
   appContainer: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#1a1a2e',
   },
   title: {
     fontSize: 28,
